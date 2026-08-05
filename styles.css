@@ -86,3 +86,15 @@ body.modal-open{overflow:hidden;touch-action:none}
   .createIntro h2{font-size:24px}
   .sectionHead .muted{font-size:13px;line-height:1.35;max-width:235px}
 }
+
+/* v0.9.2 — аккуратный профиль */
+.profileIdentity{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.profileIdentity h2{margin-bottom:5px}
+.profilePrimaryAction{margin-top:18px}
+.profilePrimaryAction .btn{width:100%;max-width:320px}
+.profileQuick .thumb{background:#f8edf1}
+.profileLogout{display:flex;justify-content:center;padding:8px 0 32px}
+.profileLogout .btn{width:100%;max-width:420px}
+.bonusRate{margin:14px 0 4px;padding:13px 14px;border-radius:15px;background:#f8edf1;color:var(--brand)}
+.bonusRate b{font-weight:900}
+@media(max-width:540px){.profilePrimaryAction .btn,.profileLogout .btn{max-width:none}.profileSummary .stats{grid-template-columns:repeat(3,1fr)}}

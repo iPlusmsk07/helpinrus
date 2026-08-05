@@ -1,0 +1,8 @@
+{
+  "appId": "ru.pomogay.app",
+  "appName": "Помогай",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
