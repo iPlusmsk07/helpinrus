@@ -62,3 +62,27 @@
   .cats{grid-template-columns:repeat(3,1fr)}
   .modal{max-height:88vh}
 }
+
+/* Release 1.9 — MVP polish and reliability */
+body.modal-open{overflow:hidden;touch-action:none}
+.choiceCard.help,.choiceCard.give{color:#fff;border:0;box-shadow:0 14px 34px rgba(16,24,40,.14)}
+.choiceCard.help{background:linear-gradient(135deg,#087a50,#12a66d)}
+.choiceCard.give{background:linear-gradient(135deg,#5b102a,#7A1F3D 64%,#a43b60)}
+.choiceCard.help span:last-child,.choiceCard.give span:last-child{color:rgba(255,255,255,.84)}
+.choiceCard .circleIcon{background:rgba(255,255,255,.18)!important;border:1px solid rgba(255,255,255,.32);box-shadow:none}
+.filterOnlyBtn{min-height:44px;white-space:nowrap}
+.createPanel{padding:0;overflow:hidden}
+.createIntro{background:linear-gradient(135deg,#5b102a,#7A1F3D 65%,#a43b60);color:#fff;padding:22px 20px;margin:0 0 18px}
+.createIntro h2{margin:0;font-size:28px}.createIntro p{margin:7px 0 0;color:rgba(255,255,255,.82)}
+.createPanel>.seg,.createPanel>.form,.createPanel>div[style]{margin-left:20px;margin-right:20px}
+.createPanel>div[style]{padding-bottom:22px}
+.sheetTop{height:36px;position:sticky;top:-20px;z-index:8;background:#fff;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:-12px -4px 6px;padding:0 2px;touch-action:none}
+.sheetbar{grid-column:2;width:64px;height:34px;margin:0;position:static;touch-action:none}
+.sheetClose{grid-column:3;justify-self:end;border:0;width:32px;height:32px;border-radius:50%;background:#f2f4f7;color:#475467;font-size:24px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.authError{background:#fff0f0;border:1px solid #fda29b;color:#b42318;border-radius:13px;padding:10px 12px;font-size:13px;line-height:1.4}
+.authSwitch{margin-top:10px;width:100%}.authSubmitBtn:disabled{opacity:.65;cursor:wait}
+@media(max-width:540px){
+  .choiceGrid{gap:10px}.choiceCard{min-height:150px;padding:18px 16px}
+  .createIntro h2{font-size:24px}
+  .sectionHead .muted{font-size:13px;line-height:1.35;max-width:235px}
+}
