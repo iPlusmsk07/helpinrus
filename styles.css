@@ -98,3 +98,33 @@ body.modal-open{overflow:hidden;touch-action:none}
 .bonusRate{margin:14px 0 4px;padding:13px 14px;border-radius:15px;background:#f8edf1;color:var(--brand)}
 .bonusRate b{font-weight:900}
 @media(max-width:540px){.profilePrimaryAction .btn,.profileLogout .btn{max-width:none}.profileSummary .stats{grid-template-columns:repeat(3,1fr)}}
+
+/* v0.9.3 — новая архитектура профиля */
+.profilePage{background:#fff}
+.profilePage .main{background:#fff}
+.profileSummary{border-color:#eadde2;box-shadow:0 14px 32px rgba(91,16,42,.08)}
+.profileSummary .trustMeter{background:#f8f5f6}
+.profilePrimaryAction .btn{max-width:none}
+.profileSection{border-radius:28px;padding:24px;background:linear-gradient(145deg,#5b102a,#7A1F3D 68%,#913253);box-shadow:0 18px 36px rgba(91,16,42,.18)}
+.profileSection>h2{color:#fff;margin:0 0 16px}
+.profileMenuGrid{display:grid;gap:12px}
+.profileMenuCard{width:100%;display:grid;grid-template-columns:62px minmax(0,1fr) 22px;align-items:center;gap:14px;text-align:left;border:0;border-radius:20px;background:#fff;color:var(--ink);padding:15px;cursor:pointer;box-shadow:0 8px 20px rgba(35,18,25,.08)}
+.profileMenuCard:active{transform:scale(.99)}
+.profileMenuCard>span:nth-child(2){min-width:0}
+.profileMenuCard b,.profileMenuCard small{display:block}
+.profileMenuCard b{font-size:17px;line-height:1.18}
+.profileMenuCard small{margin-top:4px;color:var(--muted);font-size:13px;line-height:1.32}
+.profileMenuCard i{font-style:normal;font-size:28px;color:var(--brand);justify-self:end}
+.profileMenuIcon{width:58px;height:58px;border-radius:18px;background:#f8edf1;display:grid;place-items:center;font-size:29px}
+.settingsList{display:grid;gap:10px;margin:16px 0}
+.settingRow,.settingsAction{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:14px;text-align:left;color:var(--ink)}
+.settingRow span,.settingsAction span{min-width:0}.settingRow b,.settingRow small,.settingsAction b,.settingsAction small{display:block}.settingRow small,.settingsAction small{color:var(--muted);margin-top:3px;font-size:13px}.settingsAction i{font-style:normal;font-size:24px}.settingsLogout{width:100%;margin-top:18px}
+.bonusGridSingle{grid-template-columns:1fr!important}
+.bonusGridSingle .bonusPack{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-color:#eadde2}
+.bonusGridSingle .bonusPack span{min-width:0}.bonusGridSingle .bonusPack strong,.bonusGridSingle .bonusPack small{display:block}.bonusGridSingle .bonusPack strong{font-size:19px;color:var(--brand)}.bonusGridSingle .bonusPack small{margin-top:5px;color:var(--ink);font-weight:800}.bonusGridSingle .bonusPack i{font-style:normal;background:var(--brand);color:#fff;border-radius:12px;padding:9px 12px;font-weight:900}.bonusGridSingle .bonusPack.best{background:#fff7fa}
+@media(max-width:540px){
+  .profileSection{padding:18px;border-radius:24px}
+  .profileMenuCard{grid-template-columns:54px minmax(0,1fr) 18px;padding:13px;gap:11px}
+  .profileMenuIcon{width:52px;height:52px;border-radius:16px;font-size:25px}
+  .profileMenuCard b{font-size:16px}.profileMenuCard small{font-size:12px}
+}

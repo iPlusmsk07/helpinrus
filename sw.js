@@ -1,4 +1,4 @@
-const CACHE='pomogay-v092-auth-pwa';
+const CACHE='pomogay-v093-profile-architecture';
 const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 
 self.addEventListener('install',event=>{
