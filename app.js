@@ -147,26 +147,42 @@ async function signOut(){if(sb)await sb.auth.signOut();state.session=null;state.
 // Вызывается из native-bundle.js, когда приложение открыто по ссылке pomogay://auth-callback
 // (пользователь подтвердил email или прошёл по magic-ссылке из письма).
 window.handleAuthDeepLink=async function(url){
-  if(!sb)return;
+  if(!sb||!url)return;
   try{
-    const hashIndex=url.indexOf('#');
-    if(hashIndex>=0){
-      const params=new URLSearchParams(url.slice(hashIndex+1));
-      const access_token=params.get('access_token'),refresh_token=params.get('refresh_token');
-      if(access_token&&refresh_token){
-        const {data,error}=await sb.auth.setSession({access_token,refresh_token});
-        if(error)throw error;
-        state.session=data.session;await ensureProfile();closeModal();render();
-        toast('Email подтверждён, вы вошли в аккаунт');return;
-      }
-    }
-    if(url.includes('code=')){
-      const {data,error}=await sb.auth.exchangeCodeForSession(url);
+    // Поддерживаем оба Supabase flow: PKCE (?code=...) и implicit (#access_token=...).
+    // URL() понимает кастомную схему pomogay://, а hash разбираем отдельно.
+    const parsed=new URL(url);
+    const query=parsed.searchParams;
+    const hash=new URLSearchParams((parsed.hash||'').replace(/^#/,''));
+    const errorDescription=query.get('error_description')||hash.get('error_description');
+    if(errorDescription)throw new Error(decodeURIComponent(errorDescription));
+
+    const code=query.get('code');
+    if(code){
+      const {data,error}=await sb.auth.exchangeCodeForSession(code);
       if(error)throw error;
-      state.session=data.session;await ensureProfile();closeModal();render();
-      toast('Email подтверждён, вы вошли в аккаунт');return;
+      state.session=data.session;
+      await ensureProfile();
+      closeModal();render();toast('Email подтверждён, вы вошли в аккаунт');
+      return true;
     }
-  }catch(e){console.warn('Auth deep link error',e);toast('Не удалось завершить подтверждение. Попробуйте войти вручную.')}
+
+    const access_token=hash.get('access_token')||query.get('access_token');
+    const refresh_token=hash.get('refresh_token')||query.get('refresh_token');
+    if(access_token&&refresh_token){
+      const {data,error}=await sb.auth.setSession({access_token,refresh_token});
+      if(error)throw error;
+      state.session=data.session;
+      await ensureProfile();
+      closeModal();render();toast('Email подтверждён, вы вошли в аккаунт');
+      return true;
+    }
+    return false;
+  }catch(e){
+    console.warn('Auth deep link error',e);
+    toast('Не удалось завершить подтверждение. Попробуйте войти вручную.');
+    return false;
+  }
 };
 async function ensureProfile(){if(!sb||!state.session)return;const u=state.session.user;let {data,error}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();if(error)console.warn(error);if(!data){const row={id:u.id,name:u.user_metadata?.name||u.email?.split('@')[0]||'Пользователь',city:u.user_metadata?.city||'Москва',role:'customer'};const r=await sb.from('profiles').insert(row).select().single();if(!r.error)data=r.data}if(data){state.user={name:data.name||'Пользователь',city:data.city||'Москва',verified:!!data.verified,avatar_url:data.avatar_url||null};save()}}
 function serviceFromRow(x){return {id:x.id,icon:(categories.find(c=>c[1]===x.category)||['✨'])[0],title:x.title,cat:x.category,name:x.profiles?.name||'Помощник',rating:Number(x.profiles?.rating||5),reviews:0,price:money(x.price_from),city:x.city||'Москва',verified:!!x.profiles?.verified,selfEmployed:x.profiles?.legal_status==='self_employed',ip:x.profiles?.legal_status==='ip',company:x.profiles?.legal_status==='company',pro:!!x.profiles?.pro_until,distance:null,response:`${x.response_minutes||60} минут`,desc:x.description,online:false,owner_id:x.owner_id}}
@@ -183,5 +199,11 @@ saveProfile=async function(e){e.preventDefault();const d=Object.fromEntries(new 
 const baseProfile=profile;
 profile=function(){if(!state.session){shell(`<section class="panel authPrompt"><h2>Войдите в аккаунт</h2><p class="muted">Регистрация нужна для публикаций, избранного, профиля и чатов.</p><div class="actions"><button class="btn primary" onclick="showAuth('login')">Войти</button><button class="btn outline" onclick="showAuth('signup')">Регистрация</button></div></section>`);return}baseProfile();const panel=document.querySelector('main .panel');panel?.insertAdjacentHTML('beforeend',`<div class="actions"><button class="btn danger" onclick="signOut()">Выйти</button></div>`)};
 
-async function initApp(){Object.assign(window,{handleTopAvatar,showWelcomeAuth,go,setFilter,fav,openService,addTask,addService,startChat,chat,sendMsg,closeModal,installHelp,showLegal,state,render,chooseRole,setRole,editProfile,saveProfile,verifyProfile,showFilters,showPro,showPlans,showBonusShop,showPromotion,showTrustLevels,buyBonusDemo,payPromotion,spendBonuses,reportUser,showAuth,authSubmit,signOut,showAccountMenu,startHelping,openNearbyMap,setRadius,showLocationMenu,useMyLocation,chooseCity,chooseRadius});render();if(!sb){toast('Проверьте config.js');return}const {data}=await sb.auth.getSession();state.session=data.session;await ensureProfile();await loadCloud();sb.auth.onAuthStateChange(async(_event,session)=>{state.session=session;await ensureProfile();await loadCloud();render()});if('serviceWorker'in navigator&&!isNativeApp())navigator.serviceWorker.register('sw.js')}
+async function initApp(){Object.assign(window,{handleTopAvatar,showWelcomeAuth,go,setFilter,fav,openService,addTask,addService,startChat,chat,sendMsg,closeModal,installHelp,showLegal,state,render,chooseRole,setRole,editProfile,saveProfile,verifyProfile,showFilters,showPro,showPlans,showBonusShop,showPromotion,showTrustLevels,buyBonusDemo,payPromotion,spendBonuses,reportUser,showAuth,authSubmit,signOut,showAccountMenu,startHelping,openNearbyMap,setRadius,showLocationMenu,useMyLocation,chooseCity,chooseRadius});render();if(!sb){toast('Проверьте config.js');return}const {data}=await sb.auth.getSession();state.session=data.session;
+// При возврате из письма в браузере завершаем PKCE/implicit callback до загрузки данных.
+if(location.search.includes('code=')||location.hash.includes('access_token=')){
+  await window.handleAuthDeepLink(location.href);
+  history.replaceState({},document.title,location.pathname);
+}
+await ensureProfile();await loadCloud();sb.auth.onAuthStateChange(async(_event,session)=>{state.session=session;await ensureProfile();await loadCloud();render()});if('serviceWorker'in navigator&&!isNativeApp())navigator.serviceWorker.register('sw.js')}
 initApp();
