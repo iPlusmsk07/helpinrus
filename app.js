@@ -119,6 +119,8 @@ const sb=(window.supabase&&cfg.SUPABASE_URL&&cfg.SUPABASE_ANON_KEY)?window.supab
 const money=v=>v==null?'По договорённости':`от ${Number(v).toLocaleString('ru-RU')} ₽`;
 const numberFromText=v=>{const n=String(v||'').replace(/[^0-9.,]/g,'').replace(',','.');return n?Number(n):null};
 function requireAuth(){if(state.session)return true;showAuth();toast('Сначала войдите или зарегистрируйтесь');return false}
+function isNativeApp(){return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}
+function getAuthRedirectUrl(){return isNativeApp()?'pomogay://auth-callback':location.origin}
 function showAuth(mode='login'){modal(`<h2>${mode==='signup'?'Регистрация':'Вход'}</h2><p class="muted">${mode==='signup'?'Создайте аккаунт, чтобы находить помощь, помогать другим и общаться.':'Войдите, чтобы помогать и получать помощь.'}</p><form class="form" onsubmit="authSubmit(event,'${mode}')">${mode==='signup'?'<div class="field"><label>Имя</label><input name="name" required autocomplete="name" placeholder="Ваше имя"></div>':''}<div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="name@example.com"></div><div class="field"><label>Пароль</label><input name="password" type="password" minlength="8" required autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="Не менее 8 символов"></div><div id="authError" class="authError" hidden></div><button class="btn primary authSubmitBtn">${mode==='signup'?'Создать аккаунт':'Войти'}</button></form><button class="btn outline authSwitch" onclick="closeModal();setTimeout(()=>showAuth('${mode==='signup'?'login':'signup'}'),260)">${mode==='signup'?'У меня уже есть аккаунт':'Создать аккаунт'}</button>`) }
 async function authSubmit(e,mode){
   e.preventDefault();
@@ -130,7 +132,7 @@ async function authSubmit(e,mode){
   try{
     const email=String(d.email||'').trim().toLowerCase();
     let r=mode==='signup'
-      ? await sb.auth.signUp({email,password:d.password,options:{data:{name:String(d.name||'').trim(),city:'Москва'},emailRedirectTo:location.origin}})
+      ? await sb.auth.signUp({email,password:d.password,options:{data:{name:String(d.name||'').trim(),city:'Москва'},emailRedirectTo:getAuthRedirectUrl()}})
       : await sb.auth.signInWithPassword({email,password:d.password});
     if(r.error)throw r.error;
     if(mode==='signup'&&!r.data.session){showError('Аккаунт создан. Откройте письмо Supabase и подтвердите email, затем войдите.');button.textContent='Письмо отправлено';return}
@@ -142,6 +144,30 @@ async function authSubmit(e,mode){
   }finally{button.disabled=false;if(button.textContent!=='Письмо отправлено')button.textContent=mode==='signup'?'Создать аккаунт':'Войти'}
 }
 async function signOut(){if(sb)await sb.auth.signOut();state.session=null;state.page='home';render();toast('Вы вышли')}
+// Вызывается из native-bundle.js, когда приложение открыто по ссылке pomogay://auth-callback
+// (пользователь подтвердил email или прошёл по magic-ссылке из письма).
+window.handleAuthDeepLink=async function(url){
+  if(!sb)return;
+  try{
+    const hashIndex=url.indexOf('#');
+    if(hashIndex>=0){
+      const params=new URLSearchParams(url.slice(hashIndex+1));
+      const access_token=params.get('access_token'),refresh_token=params.get('refresh_token');
+      if(access_token&&refresh_token){
+        const {data,error}=await sb.auth.setSession({access_token,refresh_token});
+        if(error)throw error;
+        state.session=data.session;await ensureProfile();closeModal();render();
+        toast('Email подтверждён, вы вошли в аккаунт');return;
+      }
+    }
+    if(url.includes('code=')){
+      const {data,error}=await sb.auth.exchangeCodeForSession(url);
+      if(error)throw error;
+      state.session=data.session;await ensureProfile();closeModal();render();
+      toast('Email подтверждён, вы вошли в аккаунт');return;
+    }
+  }catch(e){console.warn('Auth deep link error',e);toast('Не удалось завершить подтверждение. Попробуйте войти вручную.')}
+};
 async function ensureProfile(){if(!sb||!state.session)return;const u=state.session.user;let {data,error}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();if(error)console.warn(error);if(!data){const row={id:u.id,name:u.user_metadata?.name||u.email?.split('@')[0]||'Пользователь',city:u.user_metadata?.city||'Москва',role:'customer'};const r=await sb.from('profiles').insert(row).select().single();if(!r.error)data=r.data}if(data){state.user={name:data.name||'Пользователь',city:data.city||'Москва',verified:!!data.verified,avatar_url:data.avatar_url||null};save()}}
 function serviceFromRow(x){return {id:x.id,icon:(categories.find(c=>c[1]===x.category)||['✨'])[0],title:x.title,cat:x.category,name:x.profiles?.name||'Помощник',rating:Number(x.profiles?.rating||5),reviews:0,price:money(x.price_from),city:x.city||'Москва',verified:!!x.profiles?.verified,selfEmployed:x.profiles?.legal_status==='self_employed',ip:x.profiles?.legal_status==='ip',company:x.profiles?.legal_status==='company',pro:!!x.profiles?.pro_until,distance:null,response:`${x.response_minutes||60} минут`,desc:x.description,online:false,owner_id:x.owner_id}}
 async function loadCloud(){if(!sb)return;try{const sr=await sb.from('services').select('*,profiles(name,rating,verified,legal_status,pro_until)').eq('is_active',true).order('created_at',{ascending:false});if(!sr.error&&sr.data?.length)state.services=[...sr.data.map(serviceFromRow),...seed];if(state.session){const uid=state.session.user.id;const tr=await sb.from('tasks').select('*').eq('customer_id',uid).order('created_at',{ascending:false});if(!tr.error)state.tasks=(tr.data||[]).map(x=>({id:x.id,title:x.title,cat:x.category,desc:x.description,budget:x.budget?`${Number(x.budget).toLocaleString('ru-RU')} ₽`:'По договорённости',city:x.address||'Москва'}));const fr=await sb.from('favorites').select('service_id').eq('user_id',uid);if(!fr.error)state.fav=(fr.data||[]).map(x=>x.service_id)}state.cloudReady=true;render()}catch(e){console.warn('Cloud load',e)}}
@@ -157,5 +183,5 @@ saveProfile=async function(e){e.preventDefault();const d=Object.fromEntries(new 
 const baseProfile=profile;
 profile=function(){if(!state.session){shell(`<section class="panel authPrompt"><h2>Войдите в аккаунт</h2><p class="muted">Регистрация нужна для публикаций, избранного, профиля и чатов.</p><div class="actions"><button class="btn primary" onclick="showAuth('login')">Войти</button><button class="btn outline" onclick="showAuth('signup')">Регистрация</button></div></section>`);return}baseProfile();const panel=document.querySelector('main .panel');panel?.insertAdjacentHTML('beforeend',`<div class="actions"><button class="btn danger" onclick="signOut()">Выйти</button></div>`)};
 
-async function initApp(){Object.assign(window,{handleTopAvatar,showWelcomeAuth,go,setFilter,fav,openService,addTask,addService,startChat,chat,sendMsg,closeModal,installHelp,showLegal,state,render,chooseRole,setRole,editProfile,saveProfile,verifyProfile,showFilters,showPro,showPlans,showBonusShop,showPromotion,showTrustLevels,buyBonusDemo,payPromotion,spendBonuses,reportUser,showAuth,authSubmit,signOut,showAccountMenu,startHelping,openNearbyMap,setRadius,showLocationMenu,useMyLocation,chooseCity,chooseRadius});render();if(!sb){toast('Проверьте config.js');return}const {data}=await sb.auth.getSession();state.session=data.session;await ensureProfile();await loadCloud();sb.auth.onAuthStateChange(async(_event,session)=>{state.session=session;await ensureProfile();await loadCloud();render()});if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js')}
+async function initApp(){Object.assign(window,{handleTopAvatar,showWelcomeAuth,go,setFilter,fav,openService,addTask,addService,startChat,chat,sendMsg,closeModal,installHelp,showLegal,state,render,chooseRole,setRole,editProfile,saveProfile,verifyProfile,showFilters,showPro,showPlans,showBonusShop,showPromotion,showTrustLevels,buyBonusDemo,payPromotion,spendBonuses,reportUser,showAuth,authSubmit,signOut,showAccountMenu,startHelping,openNearbyMap,setRadius,showLocationMenu,useMyLocation,chooseCity,chooseRadius});render();if(!sb){toast('Проверьте config.js');return}const {data}=await sb.auth.getSession();state.session=data.session;await ensureProfile();await loadCloud();sb.auth.onAuthStateChange(async(_event,session)=>{state.session=session;await ensureProfile();await loadCloud();render()});if('serviceWorker'in navigator&&!isNativeApp())navigator.serviceWorker.register('sw.js')}
 initApp();
