@@ -1,4 +1,4 @@
-const CACHE='pomogay-v093-profile-architecture';
+const CACHE='pomogay-v093-security-hardening-1';
 const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 
 self.addEventListener('install',event=>{
@@ -21,10 +21,13 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const request=event.request;
+  const url=new URL(request.url);
+  // Никогда не кэшируем Auth/REST/Storage и другие внешние ответы.
+  if(url.origin!==self.location.origin)return;
   event.respondWith((async()=>{
     try{
       const response=await fetch(request);
-      if(response&&response.ok){
+      if(response&&response.ok&&response.type==='basic'){
         const cache=await caches.open(CACHE);
         cache.put(request,response.clone()).catch(()=>{});
       }
