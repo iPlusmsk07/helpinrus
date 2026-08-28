@@ -38,7 +38,7 @@ p{color:var(--muted)}
 .desktop-nav button.active{background:#fff;color:var(--brand);box-shadow:0 5px 14px rgba(55,4,23,.18);font-weight:800}
 .desktop-nav button span{display:grid;place-items:center;font-size:19px;line-height:1}
 .desktop-nav button small{font-size:13px}
-.nav-chat-icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav-chat-icon,.nav-profile-icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .location-control{height:42px;max-width:260px;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:0 14px;cursor:pointer;white-space:nowrap;overflow:hidden}
 .location-control span:last-child{overflow:hidden;text-overflow:ellipsis}
 .top-avatar{width:44px;height:44px;border:2px solid rgba(255,255,255,.82);border-radius:50%;padding:0;background:#fff;cursor:pointer;overflow:hidden;box-shadow:0 5px 14px rgba(55,4,23,.2)}
