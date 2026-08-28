@@ -136,6 +136,33 @@ begin
 end
 $$;
 
+-- Account deletion must not be blocked by private conversations or related data.
+alter table public.conversations
+  drop constraint if exists conversations_customer_id_fkey,
+  add constraint conversations_customer_id_fkey foreign key (customer_id)
+    references public.profiles(id) on delete cascade,
+  drop constraint if exists conversations_helper_id_fkey,
+  add constraint conversations_helper_id_fkey foreign key (helper_id)
+    references public.profiles(id) on delete cascade;
+
+alter table public.messages
+  drop constraint if exists messages_sender_id_fkey,
+  add constraint messages_sender_id_fkey foreign key (sender_id)
+    references public.profiles(id) on delete cascade;
+
+alter table public.reports
+  drop constraint if exists reports_reporter_id_fkey,
+  add constraint reports_reporter_id_fkey foreign key (reporter_id)
+    references public.profiles(id) on delete set null,
+  drop constraint if exists reports_target_user_id_fkey,
+  add constraint reports_target_user_id_fkey foreign key (target_user_id)
+    references public.profiles(id) on delete set null;
+
+alter table public.subscriptions
+  drop constraint if exists subscriptions_user_id_fkey,
+  add constraint subscriptions_user_id_fkey foreign key (user_id)
+    references public.profiles(id) on delete cascade;
+
 revoke all on table public.profiles, public.services, public.tasks, public.responses,
   public.conversations, public.messages, public.favorites, public.reports,
   public.subscriptions from anon, authenticated;

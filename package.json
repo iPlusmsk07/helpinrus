@@ -11,6 +11,7 @@
     "build": "node scripts/prepare-www.mjs",
     "check:syntax": "node --check app.js && node --check sw.js && node --check native-bundle.js && node --check scripts/prepare-www.mjs",
     "test": "node --check app.js && node --check sw.js && node --check native-bundle.js && node --check scripts/prepare-www.mjs && node --test tests/*.test.mjs",
+    "test:rls": "node scripts/verify-supabase-rls.mjs",
     "sync": "node scripts/prepare-www.mjs && pnpm exec cap sync",
     "open:ios": "pnpm exec cap open ios",
     "open:android": "pnpm exec cap open android"

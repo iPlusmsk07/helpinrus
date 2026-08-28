@@ -33,14 +33,14 @@ create table if not exists responses (
 );
 create table if not exists conversations (
   id uuid primary key default uuid_generate_v4(), task_id uuid references tasks(id) on delete set null,
-  customer_id uuid not null references profiles(id), helper_id uuid not null references profiles(id),
+  customer_id uuid not null references profiles(id) on delete cascade, helper_id uuid not null references profiles(id) on delete cascade,
   created_at timestamptz default now(),
   unique(task_id,customer_id,helper_id),
   check (customer_id <> helper_id)
 );
 create table if not exists messages (
   id bigint generated always as identity primary key, conversation_id uuid not null references conversations(id) on delete cascade,
-  sender_id uuid not null references profiles(id), body text not null check (char_length(body) between 1 and 4000), read_at timestamptz,
+  sender_id uuid not null references profiles(id) on delete cascade, body text not null check (char_length(body) between 1 and 4000), read_at timestamptz,
   created_at timestamptz default now()
 );
 create table if not exists favorites (
@@ -48,11 +48,11 @@ create table if not exists favorites (
   created_at timestamptz default now(), primary key(user_id,service_id)
 );
 create table if not exists reports (
-  id uuid primary key default uuid_generate_v4(), reporter_id uuid references profiles(id), target_user_id uuid references profiles(id),
+  id uuid primary key default uuid_generate_v4(), reporter_id uuid references profiles(id) on delete set null, target_user_id uuid references profiles(id) on delete set null,
   reason text not null check (char_length(reason) between 3 and 120), details text check (char_length(details) <= 4000), status text default 'new' check (status in ('new','reviewing','resolved','rejected')), created_at timestamptz default now()
 );
 create table if not exists subscriptions (
-  id uuid primary key default uuid_generate_v4(), user_id uuid not null references profiles(id), provider text,
+  id uuid primary key default uuid_generate_v4(), user_id uuid not null references profiles(id) on delete cascade, provider text,
   provider_subscription_id text unique, status text default 'pending' check (status in ('pending','active','past_due','cancelled','expired')), current_period_end timestamptz,
   created_at timestamptz default now()
 );
