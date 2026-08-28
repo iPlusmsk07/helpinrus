@@ -25,6 +25,9 @@
 - [x] `pnpm install --frozen-lockfile --ignore-scripts`
 - [x] `pnpm audit --prod`: известных уязвимостей не найдено
 - [x] `pnpm exec cap sync` для web
+- [x] GitHub vulnerability alerts и Dependabot security updates включены
+- [x] Secret scanning и push protection включены
+- [x] `main` защищена обязательным PR и успешной проверкой `verify`
 - [x] визуальная проверка 1440x900
 - [x] визуальная проверка 390x844
 - [x] нет горизонтального переполнения и browser console errors

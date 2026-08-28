@@ -12,7 +12,7 @@
 
 ## Этап 2. Создать Draft Pull Request
 
-Статус: завершён 28 августа 2026 года. Draft PR создан, проверки GitHub зелёные, merge не выполнялся.
+Статус: завершён 28 августа 2026 года. Draft PR создан, проверки GitHub зелёные, merge не выполнялся. Для `main` включены обязательный PR, строгая проверка `verify`, запрет force push и удаления ветки; включены vulnerability alerts, Dependabot security updates, secret scanning и push protection.
 
 1. Отправить только ветку `audit/security-reliability-2026-08-27`.
 2. Создать Draft PR в `main`.
