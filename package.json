@@ -1,20 +1,28 @@
 {
   "name": "pomogay-mobile",
-  "version": "0.9.1",
+  "version": "0.9.3",
   "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "prepare:www": "node scripts/prepare-www.mjs",
-    "sync": "npm run prepare:www && npx cap sync",
-    "open:ios": "npx cap open ios",
-    "open:android": "npx cap open android"
+    "build": "node scripts/prepare-www.mjs",
+    "check:syntax": "node --check app.js && node --check sw.js && node --check native-bundle.js && node --check scripts/prepare-www.mjs",
+    "test": "node --check app.js && node --check sw.js && node --check native-bundle.js && node --check scripts/prepare-www.mjs && node --test tests/*.test.mjs",
+    "test:rls": "node scripts/verify-supabase-rls.mjs",
+    "sync": "node scripts/prepare-www.mjs && pnpm exec cap sync",
+    "open:ios": "pnpm exec cap open ios",
+    "open:android": "pnpm exec cap open android"
   },
   "dependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/app": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/ios": "^7.0.0"
+    "@capacitor/android": "7.6.8",
+    "@capacitor/app": "7.1.2",
+    "@capacitor/core": "7.6.8",
+    "@capacitor/ios": "7.6.8"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.0.0"
+    "@capacitor/cli": "7.6.8"
   }
 }

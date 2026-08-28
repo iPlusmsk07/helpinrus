@@ -1,0 +1,46 @@
+name: Security and quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Show runtime
+        run: node --version
+
+      - name: Run project checks
+        run: |
+          node --check app.js
+          node --check sw.js
+          node --check native-bundle.js
+          node --check scripts/prepare-www.mjs
+          node --test tests/*.test.mjs
+
+      - name: Build public bundle
+        run: node scripts/prepare-www.mjs
+
+      - name: Verify clean public file list
+        run: |
+          test "$(find www -maxdepth 1 -type f | wc -l | tr -d ' ')" = "12"
+          test ! -e www/supabase-schema.sql
+          test ! -e www/supabase-security-hardening.sql
+          test ! -e www/supabase-product-experience.sql
+          test ! -e www/package.json

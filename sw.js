@@ -1,5 +1,5 @@
-const CACHE='pomogay-v093-profile-architecture';
-const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const CACHE='pomogay-burgundy-design-2';
+const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png','home-hero-v2.jpg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
@@ -21,10 +21,13 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const request=event.request;
+  const url=new URL(request.url);
+  // Никогда не кэшируем Auth/REST/Storage и другие внешние ответы.
+  if(url.origin!==self.location.origin)return;
   event.respondWith((async()=>{
     try{
       const response=await fetch(request);
-      if(response&&response.ok){
+      if(response&&response.ok&&response.type==='basic'){
         const cache=await caches.open(CACHE);
         cache.put(request,response.clone()).catch(()=>{});
       }
