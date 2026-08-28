@@ -80,7 +80,11 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /data-favorites-menu/);
   assert.match(styles, /\.desktop-nav/);
   assert.match(styles, /\.nav-chat-icon/);
-  assert.match(styles, /\.top-actions\{display:none\}/);
+  assert.doesNotMatch(app, /class="top-actions"/);
+  assert.match(app, /Телефон или почта/);
+  assert.match(app, /Запомнить пароль/);
+  assert.match(app, /Нет аккаунта в Помогай\?/);
+  assert.match(app, /credentialsForIdentity/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
