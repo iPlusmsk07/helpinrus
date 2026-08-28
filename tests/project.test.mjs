@@ -88,11 +88,24 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /credentialsForIdentity/);
   assert.match(app, /Шаг 1 из 2/);
   assert.match(app, /Шаг 2 из 2/);
-  assert.match(app, /Минимум 8 символов/);
+  assert.match(app, /8 или более символов/);
+  assert.match(app, /Используйте буквы и цифры/);
+  assert.doesNotMatch(app, /Хотя бы одна/);
   assert.match(app, /passwordIsValid/);
   assert.match(app, /name="password" type="password" minlength="8"/);
   assert.match(app, /Зарегистрироваться через Яндекс/);
   assert.match(app, /Зарегистрироваться через Госуслуги/);
+  assert.match(app, /Введите email в формате name@example\.com или номер телефона с кодом страны/);
+  assert.match(app, /Введите одноразовый код/);
+  assert.match(app, /verifySignupOtp/);
+  assert.doesNotMatch(app, /Подтвердите email/);
+  assert.doesNotMatch(app, /Мы отправили ссылку/);
+  assert.match(app, /телефон или email — отправим одноразовый код/i);
+  assert.match(app, /signInWithOtp/);
+  assert.match(app, /verifyPasswordResetCode/);
+  assert.match(app, /type:'email'/);
+  assert.match(app, /type:'sms'/);
+  assert.doesNotMatch(app, /resetPasswordForEmail/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
@@ -115,7 +128,7 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.match(app, /Отправка жалоб пока не подключена/);
   assert.match(app, /реальные деньги не списываются/);
   assert.match(app, /Полное ФИО/);
-  assert.match(app, /Не менее 12 символов/);
+  assert.match(app, /Пароль должен содержать минимум 8 символов, буквы и цифры/);
   assert.match(app, /Укажите полное ФИО/);
   assert.match(app, /Завершите профиль: укажите полное ФИО и дату рождения/);
   assert.match(app, /Восстановление пароля/);

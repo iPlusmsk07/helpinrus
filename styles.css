@@ -349,6 +349,8 @@ input[type="range"]{width:100%;accent-color:var(--brand)}
 .verification-step h2{padding:0;margin-bottom:12px}
 .verification-step p{margin-bottom:24px}
 .verification-mark{width:62px;height:62px;margin:0 auto 18px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:30px;font-weight:900}
+.reset-step{padding-top:10px}
+.reset-step h2{font-size:30px}
 .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin-bottom:16px}
 .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
 .auth-link{display:block;margin:6px auto 12px}
