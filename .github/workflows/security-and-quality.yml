@@ -39,7 +39,7 @@ jobs:
 
       - name: Verify clean public file list
         run: |
-          test "$(find www -maxdepth 1 -type f | wc -l | tr -d ' ')" = "11"
+          test "$(find www -maxdepth 1 -type f | wc -l | tr -d ' ')" = "12"
           test ! -e www/supabase-schema.sql
           test ! -e www/supabase-security-hardening.sql
           test ! -e www/supabase-product-experience.sql

@@ -26,6 +26,7 @@ test('production bundle contains only approved public files', async () => {
     'app.js',
     'apple-touch-icon.png',
     'config.js',
+    'home-hero-v2.jpg',
     'icon-192.png',
     'icon-512.png',
     'index.html',
@@ -35,6 +36,7 @@ test('production bundle contains only approved public files', async () => {
     'styles.css',
     'sw.js'
   ]);
+  assert.match(await read('styles.css'), /home-hero-v2\.jpg/);
   for (const privateFile of [
     'package.json',
     'supabase-schema.sql',

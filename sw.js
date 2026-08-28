@@ -1,5 +1,5 @@
-const CACHE='pomogay-product-experience-1';
-const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png'];
+const CACHE='pomogay-burgundy-design-2';
+const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png','home-hero-v2.jpg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{

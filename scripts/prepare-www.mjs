@@ -15,7 +15,8 @@ const publicFiles = [
   'apple-touch-icon.png',
   'icon-192.png',
   'icon-512.png',
-  'specialist-portraits-v1.png'
+  'specialist-portraits-v1.png',
+  'home-hero-v2.jpg'
 ];
 
 await rm(output, { recursive: true, force: true });
