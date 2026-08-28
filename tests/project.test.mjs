@@ -57,12 +57,30 @@ test('browser dependency is version-pinned and integrity-protected', async () =>
   assert.doesNotMatch(html, /@supabase\/supabase-js@2["/]/);
 });
 
-test('map dependency is stable, pinned and integrity-protected', async () => {
+test('maps use Yandex and do not load Leaflet', async () => {
   const html = await read('index.html');
-  assert.match(html, /leaflet@1\.9\.4\/dist\/leaflet\.css/);
-  assert.match(html, /leaflet@1\.9\.4\/dist\/leaflet\.js/);
-  assert.match(html, /sha256-p4NxAoJBhIIN\+hmNHrzRCf9tD\/miZyoHS5obTRR9BMY=/);
-  assert.match(html, /sha256-20nQCchB9co0qIjJZRGuk2\/Z9VM\+kNiyxNV1lvTlZBo=/);
+  const app = await read('app.js');
+  const netlify = await read('netlify.toml');
+  assert.doesNotMatch(html, /leaflet/i);
+  assert.doesNotMatch(app, /openstreetmap|window\.L|L\.map/i);
+  assert.match(app, /api-maps\.yandex\.ru\/2\.1/);
+  assert.match(app, /yandex\.ru\/map-widget\/v1/);
+  assert.match(netlify, /api-maps\.yandex\.ru/);
+});
+
+test('requested home, navigation and authentication UI is present', async () => {
+  const app = await read('app.js');
+  const styles = await read('styles.css');
+  assert.doesNotMatch(app, /Помощь рядом и онлайн|12 направлений|Профили с понятной специализацией|Новая публикация|Личные сообщения/);
+  assert.match(app, /Выбрать подходящего специалиста/);
+  assert.match(app, /Яндекс/);
+  assert.match(app, /Госуслуги/);
+  assert.match(app, /countryCodes=\['\+7'/);
+  assert.match(app, /Избранные специалисты/);
+  assert.match(app, /data-favorites-menu/);
+  assert.match(styles, /\.desktop-nav/);
+  assert.match(styles, /\.nav-chat-icon/);
+  assert.match(styles, /\.top-actions\{display:none\}/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
