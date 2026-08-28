@@ -299,7 +299,7 @@ async function submitSignupPassword(event){
   try{
     const credentials=pendingSignup.method==='email'?{email:pendingSignup.credential,password}:{phone:pendingSignup.credential,password},result=await sb.auth.signUp({...credentials,options:{emailRedirectTo:getAuthRedirectUrl()}});if(result.error)throw result.error;
     if(result.data.session)await sb.auth.signOut();showSignupVerification();
-  }catch(error){showFormError(form,friendlyAuthError(error))}finally{setFormBusy(form,false)}
+  }catch(error){console.warn('Signup error',{code:error?.code,status:error?.status});showFormError(form,friendlySignupError(error,pendingSignup?.method))}finally{setFormBusy(form,false)}
 }
 async function authSubmit(event){
   event.preventDefault();if(!sb)return showFormError(event.currentTarget,'Не удалось подключиться к сервису аккаунтов.');const form=event.currentTarget,d=Object.fromEntries(new FormData(form)),credentials=credentialsForIdentity(d.identity,d.password);if(credentials.error)return showFormError(form,credentials.error);setFormBusy(form,true);
@@ -321,6 +321,17 @@ async function verifyPasswordResetCode(event){event.preventDefault();const form=
 function showNewPassword(){modal(`<div class="auth-panel signup-step reset-step"><h2>Новый пароль</h2><p class="muted">Придумайте новый пароль для входа.</p><form class="signup-step-form" onsubmit="updatePassword(event)"><label class="auth-input"><span class="sr-only">Новый пароль</span><input name="password" type="password" minlength="8" required autocomplete="new-password" placeholder="Новый пароль" oninput="updatePasswordRules(this)"></label><ul class="password-rules" aria-live="polite"><li data-rule="length">8 или более символов</li><li data-rule="composition">Используйте буквы и цифры</li></ul><div class="form-error" hidden></div><button class="primary-button full signup-password-submit" disabled>Сохранить пароль</button></form></div>`)}
 async function updatePassword(event){event.preventDefault();const form=event.currentTarget,password=String(new FormData(form).get('password')||'');if(!passwordIsValid(password))return showFormError(form,'Пароль должен содержать минимум 8 символов, буквы и цифры.');setFormBusy(form,true);const result=await sb.auth.updateUser({password});setFormBusy(form,false);if(result.error)return showFormError(form,'Не удалось изменить пароль.');await sb.auth.signOut();state.session=null;pendingPasswordReset=null;clearPrivateSessionState();showAuth('login');toast('Пароль изменён. Войдите с новым паролем')}
 function friendlyAuthError(error){const text=String(error?.message||'');if(text.includes('Invalid login credentials'))return'Неверный email, телефон или пароль.';if(text.includes('already registered'))return'Такой email или телефон уже зарегистрирован.';if(text.includes('Email not confirmed'))return'Сначала подтвердите email одноразовым кодом.';return'Не удалось выполнить вход. Попробуйте ещё раз.'}
+function friendlySignupError(error,method){
+  const code=String(error?.code||'').toLowerCase(),text=String(error?.message||'').toLowerCase(),matches=(...parts)=>parts.some(part=>code.includes(part)||text.includes(part));
+  if(matches('already registered','already exists','user_already_exists','email_exists','phone_exists'))return'Аккаунт с таким email или телефоном уже есть. Войдите или восстановите пароль.';
+  if(matches('rate limit','rate_limit','over_email_send_rate_limit','over_sms_send_rate_limit'))return'Код уже запрашивали недавно. Подождите несколько минут и попробуйте снова.';
+  if(matches('weak_password','password should','password must'))return'Пароль не соответствует требованиям безопасности.';
+  if(matches('signup_disabled','signups not allowed'))return'Создание новых аккаунтов временно приостановлено.';
+  if(method==='phone'||matches('phone provider','sms provider','sms_send_failed','sms sending'))return'Не удалось отправить SMS-код. Попробуйте позже или используйте email.';
+  if(matches('sending confirmation email','email provider','email_address_not_authorized','email sending'))return'Не удалось отправить код на email. Попробуйте позже.';
+  if(matches('database error','unexpected_failure'))return'Не удалось создать аккаунт из-за временного сбоя сервиса.';
+  return'Не удалось создать аккаунт или отправить код. Попробуйте ещё раз.';
+}
 function friendlyDatabaseError(error,fallback){const text=String(error?.message||'');if(text.includes('5 МБ')||text.includes('JPG'))return text;if(text.includes('verified identity'))return'Подтверждённые ФИО и дату рождения можно изменить только через поддержку.';return fallback}
 function clearPrivateSessionState(){state.user={name:'',city:'Москва',verified:false};state.tasks=[];state.conversations=[];state.messages=[];state.people=[];state.favorites=[];state.activeConversation=null}
 async function signOut(){try{if(sb)await sb.auth.signOut()}finally{closeModal();state.session=null;clearPrivateSessionState();state.page='home';render();toast('Вы вышли')}}

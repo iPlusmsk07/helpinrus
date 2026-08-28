@@ -98,6 +98,9 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Введите email в формате name@example\.com или номер телефона с кодом страны/);
   assert.match(app, /Введите одноразовый код/);
   assert.match(app, /verifySignupOtp/);
+  assert.match(app, /friendlySignupError/);
+  assert.match(app, /Не удалось создать аккаунт или отправить код/);
+  assert.match(app, /Signup error[^\n]+friendlySignupError\(error,pendingSignup\?\.method\)/);
   assert.doesNotMatch(app, /Подтвердите email/);
   assert.doesNotMatch(app, /Мы отправили ссылку/);
   assert.match(app, /телефон или email — отправим одноразовый код/i);

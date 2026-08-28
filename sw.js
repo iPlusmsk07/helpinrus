@@ -1,4 +1,4 @@
-const CACHE='pomogay-auth-otp-6';
+const CACHE='pomogay-signup-errors-7';
 const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png','home-hero-v2.jpg'];
 
 self.addEventListener('install',event=>{
