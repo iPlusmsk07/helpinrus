@@ -75,7 +75,6 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Выбрать подходящего специалиста/);
   assert.match(app, /Яндекс/);
   assert.match(app, /Госуслуги/);
-  assert.match(app, /countryCodes=\['\+7'/);
   assert.match(app, /Избранные специалисты/);
   assert.match(app, /data-favorites-menu/);
   assert.match(styles, /\.desktop-nav/);
@@ -87,6 +86,13 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Запомнить пароль/);
   assert.match(app, /Нет аккаунта в Помогай\?/);
   assert.match(app, /credentialsForIdentity/);
+  assert.match(app, /Шаг 1 из 2/);
+  assert.match(app, /Шаг 2 из 2/);
+  assert.match(app, /Минимум 8 символов/);
+  assert.match(app, /passwordIsValid/);
+  assert.match(app, /name="password" type="password" minlength="8"/);
+  assert.match(app, /Зарегистрироваться через Яндекс/);
+  assert.match(app, /Зарегистрироваться через Госуслуги/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {

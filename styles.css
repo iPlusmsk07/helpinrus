@@ -329,13 +329,26 @@ input[type="range"]{width:100%;accent-color:var(--brand)}
 .auth-provider.gosuslugi:after{top:33px;background:#ee3f58}
 .auth-signup-question{margin:0 0 12px;color:var(--ink);font-size:17px}
 .auth-register-button{background:#fff}
-.auth-signup-panel{padding:4px 28px 24px}
-.auth-signup-panel h2{padding:0}
 .auth-back-login{display:block;margin:-4px 0 0;padding-left:0}
-.auth-method-tabs{display:flex;margin:0 0 18px}
-.auth-method-tabs button{flex:1}
-.phone-combo{display:grid;grid-template-columns:100px 1fr;gap:8px}
-.phone-combo select,.phone-combo input{min-width:0}
+.signup-step{position:relative;padding:4px 28px 28px}
+.signup-step h2{padding:0;margin-bottom:10px}
+.signup-step>.muted{margin-bottom:22px;font-size:16px}
+.auth-step-back{position:absolute;right:28px;top:5px;width:40px;height:40px;border:0;border-radius:50%;background:var(--surface-alt);font-size:24px;cursor:pointer}
+.auth-step-count{display:block;margin-bottom:10px;color:var(--brand);font-size:12px;font-weight:800;text-transform:uppercase}
+.signup-step-form{margin-bottom:20px}
+.signup-step-form>.primary-button{height:52px;margin-top:16px}
+.signup-divider{margin:22px 0 16px;text-transform:none}
+.signup-providers{margin-bottom:24px}
+.signup-identity-preview{display:inline-flex;margin-bottom:20px;padding:8px 12px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-weight:750}
+.password-rules{display:grid;gap:7px;margin:4px 0 20px;padding:0;list-style:none;color:var(--muted);font-size:14px}
+.password-rules li:before{content:"○";display:inline-block;width:22px;color:#98a2b3}
+.password-rules li.valid{color:var(--green)}
+.password-rules li.valid:before{content:"✓";color:var(--green);font-weight:900}
+.signup-password-submit:disabled{opacity:.45;cursor:not-allowed}
+.verification-step{padding:8px 28px 32px;text-align:center}
+.verification-step h2{padding:0;margin-bottom:12px}
+.verification-step p{margin-bottom:24px}
+.verification-mark{width:62px;height:62px;margin:0 auto 18px;display:grid;place-items:center;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:30px;font-weight:900}
 .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin-bottom:16px}
 .divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
 .auth-link{display:block;margin:6px auto 12px}
