@@ -1,5 +1,5 @@
-const CACHE='pomogay-v093-security-hardening-1';
-const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const CACHE='pomogay-product-experience-1';
+const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{

@@ -31,6 +31,7 @@ test('production bundle contains only approved public files', async () => {
     'index.html',
     'manifest.webmanifest',
     'native-bundle.js',
+    'specialist-portraits-v1.png',
     'styles.css',
     'sw.js'
   ]);
@@ -39,6 +40,7 @@ test('production bundle contains only approved public files', async () => {
     'supabase-schema.sql',
     'supabase-auth-migration.sql',
     'supabase-security-hardening.sql',
+    'supabase-product-experience.sql',
     'README_УСТАНОВКА.txt'
   ]) {
     assert.ok(!files.includes(privateFile));
@@ -51,6 +53,14 @@ test('browser dependency is version-pinned and integrity-protected', async () =>
   assert.match(html, /integrity="sha384-[A-Za-z0-9+/=]+"/);
   assert.match(html, /crossorigin="anonymous"/);
   assert.doesNotMatch(html, /@supabase\/supabase-js@2["/]/);
+});
+
+test('map dependency is stable, pinned and integrity-protected', async () => {
+  const html = await read('index.html');
+  assert.match(html, /leaflet@1\.9\.4\/dist\/leaflet\.css/);
+  assert.match(html, /leaflet@1\.9\.4\/dist\/leaflet\.js/);
+  assert.match(html, /sha256-p4NxAoJBhIIN\+hmNHrzRCf9tD\/miZyoHS5obTRR9BMY=/);
+  assert.match(html, /sha256-20nQCchB9co0qIjJZRGuk2\/Z9VM\+kNiyxNV1lvTlZBo=/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
@@ -72,9 +82,15 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.match(app, /Канал поддержки пока не подключён/);
   assert.match(app, /Отправка жалоб пока не подключена/);
   assert.match(app, /реальные деньги не списываются/);
-  assert.match(app, /Имя или псевдоним/);
+  assert.match(app, /Полное ФИО/);
   assert.match(app, /Не менее 12 символов/);
-  assert.doesNotMatch(app, /Укажите полное ФИО/);
+  assert.match(app, /Укажите полное ФИО/);
+  assert.match(app, /Завершите профиль: укажите полное ФИО и дату рождения/);
+  assert.match(app, /Восстановление пароля/);
+  assert.match(app, /max="500"/);
+  assert.match(app, /start_direct_conversation/);
+  assert.doesNotMatch(app, /\bprompt\(/);
+  assert.doesNotMatch(app, /setTimeout\(\(\)=>\{state\.messages/);
   assert.doesNotMatch(app, /const row=\{[^}]*role:/);
   assert.doesNotMatch(app, /\.update\(\{name:registeredName,updated_at:/);
 });
@@ -82,6 +98,7 @@ test('client does not persist profile, tasks, messages or trust state', async ()
 test('Supabase profile privileges cannot be self-assigned', async () => {
   const authMigration = await read('supabase-auth-migration.sql');
   const hardening = await read('supabase-security-hardening.sql');
+  const productExperience = await read('supabase-product-experience.sql');
   assert.doesNotMatch(authMigration, /raw_user_meta_data->>'role'/);
   assert.match(authMigration, /'customer'/);
   assert.match(hardening, /revoke all on table public\.profiles/);
@@ -93,6 +110,11 @@ test('Supabase profile privileges cannot be self-assigned', async () => {
   assert.match(hardening, /and status = 'pending'/);
   assert.match(authMigration, /file_size_limit, allowed_mime_types/);
   assert.match(authMigration, /5242880/);
+  assert.match(productExperience, /create table if not exists public\.profile_private/);
+  assert.match(productExperience, /profile private self read/);
+  assert.match(productExperience, /protect_verified_identity/);
+  assert.match(productExperience, /start_direct_conversation/);
+  assert.match(productExperience, /revoke all on table public\.profile_private/);
 });
 
 test('public Supabase key is an anon key for the expected project', async () => {

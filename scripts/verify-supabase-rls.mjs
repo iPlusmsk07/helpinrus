@@ -84,7 +84,11 @@ async function createUser(label, suffix) {
         email,
         password,
         email_confirm: true,
-        user_metadata: { name: `RLS ${label.toUpperCase()}`, city: 'Moscow' },
+        user_metadata: {
+          name: `RLS ${label.toUpperCase()} Tester`,
+          city: 'Moscow',
+          birth_date: '1990-01-01',
+        },
       },
     }),
   );
@@ -198,6 +202,39 @@ try {
   );
   assert.deepEqual(foreignProfile, []);
 
+  const ownPrivateProfile = await expectOk(
+    'user can read own private profile fields',
+    rest(a, 'profile_private', {
+      query: `id=eq.${a.id}&select=id,birth_date,phone`,
+    }),
+  );
+  assert.equal(ownPrivateProfile.length, 1);
+  assert.equal(ownPrivateProfile[0].birth_date, '1990-01-01');
+
+  const updatedPrivateProfile = await expectOk(
+    'user can update own private profile fields',
+    rest(a, 'profile_private', {
+      method: 'PATCH',
+      query: `id=eq.${a.id}&select=id,birth_date,phone`,
+      body: { birth_date: '1991-02-03', phone: '+7 900 000-00-00' },
+      prefer: 'return=representation',
+    }),
+  );
+  assert.equal(updatedPrivateProfile.length, 1);
+
+  const foreignPrivateProfile = await expectOk(
+    'user cannot read another private profile',
+    rest(b, 'profile_private', {
+      query: `id=eq.${a.id}&select=id,birth_date,phone`,
+    }),
+  );
+  assert.deepEqual(foreignPrivateProfile, []);
+
+  await expectDenied(
+    'anonymous visitor cannot read private profiles',
+    rest(null, 'profile_private', { query: `id=eq.${a.id}&select=*` }),
+  );
+
   const [service] = await expectOk(
     'owner can create a service',
     rest(a, 'services', {
@@ -207,6 +244,7 @@ try {
         owner_id: a.id,
         title: 'Secure test service',
         category: 'test',
+        subcategory: 'product experience',
         description: 'A service created by the automated RLS verification.',
         price_from: 100,
         city: 'Kazan',
@@ -250,6 +288,7 @@ try {
         customer_id: a.id,
         title: 'Secure test task',
         category: 'test',
+        subcategory: 'product experience',
         description: 'A task created by the automated RLS verification.',
         budget: 250,
         status: 'open',
@@ -387,6 +426,28 @@ try {
   );
   assert.ok(recipientRead[0].read_at);
 
+  const directConversationId = await expectOk(
+    'authenticated user can start a direct conversation with another profile',
+    request('/rest/v1/rpc/start_direct_conversation', {
+      method: 'POST',
+      token: a.token,
+      body: { other_user: c.id },
+    }),
+  );
+  assert.match(directConversationId, /^[0-9a-f-]{36}$/);
+
+  const directForParticipant = await expectOk(
+    'direct conversation is visible to its participant',
+    rest(c, 'conversations', { query: `id=eq.${directConversationId}&select=id,kind` }),
+  );
+  assert.equal(directForParticipant[0].kind, 'direct');
+
+  const directForOutsider = await expectOk(
+    'direct conversation is hidden from an outsider',
+    rest(b, 'conversations', { query: `id=eq.${directConversationId}&select=id` }),
+  );
+  assert.deepEqual(directForOutsider, []);
+
   await expectOk(
     'user can add own favorite',
     rest(a, 'favorites', {
@@ -451,6 +512,35 @@ try {
         category: 'test',
         description: 'This anonymous write must be rejected by database grants.',
       },
+    }),
+  );
+
+  await expectOk(
+    'support can mark a profile as identity verified',
+    request(`/rest/v1/profiles?id=eq.${a.id}`, {
+      method: 'PATCH',
+      apiKey: serviceRoleKey,
+      token: serviceRoleKey,
+      body: { verified: true },
+      prefer: 'return=minimal',
+    }),
+  );
+
+  await expectDenied(
+    'verified user cannot change own full name',
+    rest(a, 'profiles', {
+      method: 'PATCH',
+      query: `id=eq.${a.id}`,
+      body: { name: 'Changed Verified Name' },
+    }),
+  );
+
+  await expectDenied(
+    'verified user cannot change own birth date',
+    rest(a, 'profile_private', {
+      method: 'PATCH',
+      query: `id=eq.${a.id}`,
+      body: { birth_date: '1992-03-04' },
     }),
   );
 
