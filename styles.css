@@ -28,7 +28,7 @@ h2{font-size:26px;line-height:1.18;margin-bottom:10px}
 h3{font-size:18px;line-height:1.3;margin-bottom:8px}
 p{color:var(--muted)}
 .app-shell{min-height:100vh;padding-bottom:0}
-.topbar{position:sticky;top:0;z-index:900;height:72px;padding:0 max(20px,calc((100vw - var(--content))/2));display:flex;align-items:center;justify-content:space-between;background:var(--brand);border-bottom:1px solid rgba(255,255,255,.16);box-shadow:0 7px 22px rgba(64,7,29,.16)}
+.topbar{position:sticky;top:0;z-index:900;height:72px;padding:0 max(20px,calc((100vw - var(--content))/2));display:flex;align-items:center;justify-content:flex-start;background:var(--brand);border-bottom:1px solid rgba(255,255,255,.16);box-shadow:0 7px 22px rgba(64,7,29,.16)}
 .brand{display:flex;align-items:center;gap:10px;border:0;background:none;color:#fff;padding:8px 0;font-weight:850;font-size:20px;cursor:pointer}
 .brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;background:#fff;color:var(--brand);font-size:21px;box-shadow:0 5px 14px rgba(55,4,23,.18)}
 .desktop-nav{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;padding:5px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:rgba(255,255,255,.08)}

@@ -81,6 +81,8 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(styles, /\.desktop-nav/);
   assert.match(styles, /\.nav-chat-icon/);
   assert.doesNotMatch(app, /class="top-actions"/);
+  assert.doesNotMatch(app, /class="top-avatar"/);
+  assert.match(styles, /\.topbar\{[^}]*justify-content:flex-start/);
   assert.match(app, /Телефон или почта/);
   assert.match(app, /Запомнить пароль/);
   assert.match(app, /Нет аккаунта в Помогай\?/);
