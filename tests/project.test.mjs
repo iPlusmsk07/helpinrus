@@ -79,14 +79,14 @@ test('home and catalog follow the requested two-screen flow', async () => {
   const styles = await read('styles.css');
   const homeBody = app.slice(app.indexOf('function home(){'), app.indexOf('function homeMapPanel'));
   const catalogBody = app.slice(app.indexOf('function catalog(){'), app.indexOf('function activeSubcategoryBar'));
-  assert.match(styles, /\.home-hero\{[^}]*linear-gradient/);
+  assert.match(styles, /\.home-hero\{[^}]*background:var\(--brand\)/);
   assert.doesNotMatch(homeBody, /homeMapPanel|homeMap/);
   assert.match(homeBody, /<h2>Категории<\/h2>/);
-  assert.match(homeBody, /categories\.map\(categoryCard\)/);
+  assert.match(homeBody, /visible\.map\(categoryCard\)/);
   assert.doesNotMatch(homeBody, /Популярные категории|Все категории|Специалисты рядом/);
   assert.match(app, /categoryTone/);
   assert.match(app, /category\.subs\.push\('Другое'\)/);
-  assert.match(app, /function selectIntent[^\n]+state\.view='map';go\('catalog'\)/);
+  assert.match(app, /function selectIntent[^\n]+state\.view='list'/);
   assert.doesNotMatch(catalogBody, /Поиск рядом|category-scroll|activeSubcategoryBar/);
   assert.match(catalogBody, /catalog-actions/);
   assert.match(app, /minRating/);
@@ -99,6 +99,37 @@ test('home and catalog follow the requested two-screen flow', async () => {
   assert.doesNotMatch(app, /и найти человека по ФИО/);
 });
 
+test('site-wide search, creation and profile changes are present', async () => {
+  const app = await read('app.js');
+  const styles = await read('styles.css');
+  assert.match(app, /title:'Аналитика'/);
+  assert.match(app, /title:'Работа'/);
+  assert.match(app, /Выберите основную категорию, а затем конкретное направление/);
+  assert.match(app, /toggleHomeCategories/);
+  assert.match(app, /recommendedServices\(\)\.slice\(0,6\)/);
+  assert.match(app, /Специалист или категория/);
+  assert.match(app, /submitSearchOnEnter\(event\)/);
+  assert.match(app, /step="0\.1"/);
+  assert.match(app, /Ключевые слова для направления «Другое»/);
+  assert.match(app, /showAllMapResults/);
+  assert.match(app, /Подходящие специалисты/);
+  assert.doesNotMatch(app, /class="online-dot"/);
+  assert.match(app, /distanceEnabled/);
+  assert.match(app, /Опишите, в чём заключается проблема/);
+  assert.match(app, /Где и когда нужно решить проблему\?/);
+  assert.match(app, /placeholder="Место проблемы"/);
+  assert.match(app, /value="00:00"/);
+  assert.match(app, /Сколько готовы заплатить за помощь/);
+  assert.match(app, /Найти человека по ФИО или специальности/);
+  assert.match(app, /<h2>Данные профиля<\/h2>/);
+  assert.match(app, /Мои объявления/);
+  assert.match(app, /Мои избранные/);
+  assert.match(app, /Продвинуть себя и своё объявление/);
+  assert.match(app, /profileSection\('Основные'/);
+  assert.match(styles, /--green:#8f1d46/);
+  assert.match(styles, /\.home-specialist-grid/);
+});
+
 test('requested home, navigation and authentication UI is present', async () => {
   const app = await read('app.js');
   const styles = await read('styles.css');
@@ -106,8 +137,8 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Выбрать подходящего специалиста/);
   assert.match(app, /Яндекс/);
   assert.match(app, /Госуслуги/);
-  assert.match(app, /Избранные специалисты/);
-  assert.match(app, /data-favorites-menu/);
+  assert.match(app, /Мои избранные/);
+  assert.match(app, /demoFavoritesKey/);
   assert.match(styles, /\.desktop-nav/);
   assert.match(styles, /\.nav-chat-icon/);
   assert.doesNotMatch(app, /class="top-actions"/);
@@ -161,7 +192,8 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.match(app, /Канал поддержки пока не подключён/);
   assert.match(app, /Отправка жалоб пока не подключена/);
   assert.match(app, /реальные деньги не списываются/);
-  assert.match(app, /Полное ФИО/);
+  assert.match(app, /<span>ФИО \$\{locked/);
+  assert.doesNotMatch(app, /<span>Полное ФИО<\/span>/);
   assert.match(app, /Пароль должен содержать минимум 8 символов, буквы и цифры/);
   assert.match(app, /Укажите полное ФИО/);
   assert.match(app, /Завершите профиль: укажите полное ФИО и дату рождения/);
