@@ -2,7 +2,10 @@
 
 ## Основные точки
 
-- Production: https://helpinrus.netlify.app
+- Production: `https://201.51.4.212`
+- Production SSH: `root@201.51.4.212` (аутентификация по ключу)
+- Production web root: `/var/www/helpinrus`
+- Netlify deployment: https://helpinrus.netlify.app
 - GitHub: https://github.com/iPlusmsk07/helpinrus
 - Supabase project ref: `llnjgyehxsogjmwegnyf`
 - Production branch: `main`

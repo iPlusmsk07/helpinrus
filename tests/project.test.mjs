@@ -36,7 +36,7 @@ test('production bundle contains only approved public files', async () => {
     'styles.css',
     'sw.js'
   ]);
-  assert.match(await read('styles.css'), /home-hero-v2\.jpg/);
+  assert.doesNotMatch(await read('styles.css'), /home-hero-v2\.jpg/);
   for (const privateFile of [
     'package.json',
     'supabase-schema.sql',
@@ -64,8 +64,39 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.doesNotMatch(html, /leaflet/i);
   assert.doesNotMatch(app, /openstreetmap|window\.L|L\.map/i);
   assert.match(app, /api-maps\.yandex\.ru\/2\.1/);
-  assert.match(app, /yandex\.ru\/map-widget\/v1/);
+  assert.match(app, /static-maps\.yandex\.ru\/1\.x/);
+  assert.match(app, /controls:\['zoomControl'\]/);
+  assert.doesNotMatch(app, /controls:\[[^\]]*(?:trafficControl|rulerControl)/);
+  assert.match(app, /map-location-button/);
+  assert.match(app, /map-zoom-stack/);
+  assert.doesNotMatch(app, /button \"Пробки\"|trafficControl|rulerControl/);
+  assert.match(app, /pm2rdm/);
   assert.match(netlify, /api-maps\.yandex\.ru/);
+});
+
+test('home and catalog follow the requested two-screen flow', async () => {
+  const app = await read('app.js');
+  const styles = await read('styles.css');
+  const homeBody = app.slice(app.indexOf('function home(){'), app.indexOf('function homeMapPanel'));
+  const catalogBody = app.slice(app.indexOf('function catalog(){'), app.indexOf('function activeSubcategoryBar'));
+  assert.match(styles, /\.home-hero\{[^}]*linear-gradient/);
+  assert.doesNotMatch(homeBody, /homeMapPanel|homeMap/);
+  assert.match(homeBody, /<h2>Категории<\/h2>/);
+  assert.match(homeBody, /categories\.map\(categoryCard\)/);
+  assert.doesNotMatch(homeBody, /Популярные категории|Все категории|Специалисты рядом/);
+  assert.match(app, /categoryTone/);
+  assert.match(app, /category\.subs\.push\('Другое'\)/);
+  assert.match(app, /function selectIntent[^\n]+state\.view='map';go\('catalog'\)/);
+  assert.doesNotMatch(catalogBody, /Поиск рядом|category-scroll|activeSubcategoryBar/);
+  assert.match(catalogBody, /catalog-actions/);
+  assert.match(app, /minRating/);
+  assert.match(app, /Рейтинг специалиста/);
+  assert.doesNotMatch(app, /Только с подтверждённой личностью/);
+  assert.match(app, /Выберите направление внутри основной категории/);
+  assert.match(app, /Войдите, чтобы общаться и помогать/);
+  assert.match(app, /Задачи и предложения помощи связаны с профилями только реальных пользователей/);
+  assert.match(app, /Вход и регистрация/);
+  assert.doesNotMatch(app, /и найти человека по ФИО/);
 });
 
 test('requested home, navigation and authentication UI is present', async () => {
@@ -75,12 +106,40 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Выбрать подходящего специалиста/);
   assert.match(app, /Яндекс/);
   assert.match(app, /Госуслуги/);
-  assert.match(app, /countryCodes=\['\+7'/);
   assert.match(app, /Избранные специалисты/);
   assert.match(app, /data-favorites-menu/);
   assert.match(styles, /\.desktop-nav/);
   assert.match(styles, /\.nav-chat-icon/);
-  assert.match(styles, /\.top-actions\{display:none\}/);
+  assert.doesNotMatch(app, /class="top-actions"/);
+  assert.doesNotMatch(app, /class="top-avatar"/);
+  assert.match(styles, /\.topbar\{[^}]*justify-content:flex-start/);
+  assert.match(app, /Телефон или почта/);
+  assert.match(app, /Запомнить пароль/);
+  assert.match(app, /Нет аккаунта в Помогай\?/);
+  assert.match(app, /credentialsForIdentity/);
+  assert.match(app, /Шаг 1 из 2/);
+  assert.match(app, /Шаг 2 из 2/);
+  assert.match(app, /8 или более символов/);
+  assert.match(app, /Используйте буквы и цифры/);
+  assert.doesNotMatch(app, /Хотя бы одна/);
+  assert.match(app, /passwordIsValid/);
+  assert.match(app, /name="password" type="password" minlength="8"/);
+  assert.match(app, /Зарегистрироваться через Яндекс/);
+  assert.match(app, /Зарегистрироваться через Госуслуги/);
+  assert.match(app, /Введите email в формате name@example\.com или номер телефона с кодом страны/);
+  assert.match(app, /Введите одноразовый код/);
+  assert.match(app, /verifySignupOtp/);
+  assert.match(app, /friendlySignupError/);
+  assert.match(app, /Не удалось создать аккаунт или отправить код/);
+  assert.match(app, /Signup error[^\n]+friendlySignupError\(error,pendingSignup\?\.method\)/);
+  assert.doesNotMatch(app, /Подтвердите email/);
+  assert.doesNotMatch(app, /Мы отправили ссылку/);
+  assert.match(app, /телефон или email — отправим одноразовый код/i);
+  assert.match(app, /signInWithOtp/);
+  assert.match(app, /verifyPasswordResetCode/);
+  assert.match(app, /type:'email'/);
+  assert.match(app, /type:'sms'/);
+  assert.doesNotMatch(app, /resetPasswordForEmail/);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
@@ -103,7 +162,7 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.match(app, /Отправка жалоб пока не подключена/);
   assert.match(app, /реальные деньги не списываются/);
   assert.match(app, /Полное ФИО/);
-  assert.match(app, /Не менее 12 символов/);
+  assert.match(app, /Пароль должен содержать минимум 8 символов, буквы и цифры/);
   assert.match(app, /Укажите полное ФИО/);
   assert.match(app, /Завершите профиль: укажите полное ФИО и дату рождения/);
   assert.match(app, /Восстановление пароля/);
