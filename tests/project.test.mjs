@@ -26,7 +26,6 @@ test('production bundle contains only approved public files', async () => {
     'app.js',
     'apple-touch-icon.png',
     'config.js',
-    'home-hero-v2.jpg',
     'icon-192.png',
     'icon-512.png',
     'index.html',
@@ -36,7 +35,7 @@ test('production bundle contains only approved public files', async () => {
     'styles.css',
     'sw.js'
   ]);
-  assert.match(await read('styles.css'), /home-hero-v2\.jpg/);
+  assert.doesNotMatch(await read('styles.css'), /home-hero-v2\.jpg/);
   for (const privateFile of [
     'package.json',
     'supabase-schema.sql',
@@ -64,8 +63,39 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.doesNotMatch(html, /leaflet/i);
   assert.doesNotMatch(app, /openstreetmap|window\.L|L\.map/i);
   assert.match(app, /api-maps\.yandex\.ru\/2\.1/);
-  assert.match(app, /yandex\.ru\/map-widget\/v1/);
+  assert.match(app, /static-maps\.yandex\.ru\/1\.x/);
+  assert.match(app, /controls:\['zoomControl'\]/);
+  assert.doesNotMatch(app, /controls:\[[^\]]*(?:trafficControl|rulerControl)/);
+  assert.match(app, /map-location-button/);
+  assert.match(app, /map-zoom-stack/);
+  assert.doesNotMatch(app, /button \"Пробки\"|trafficControl|rulerControl/);
+  assert.match(app, /pm2rdm/);
   assert.match(netlify, /api-maps\.yandex\.ru/);
+});
+
+test('home and catalog follow the requested two-screen flow', async () => {
+  const app = await read('app.js');
+  const styles = await read('styles.css');
+  const homeBody = app.slice(app.indexOf('function home(){'), app.indexOf('function homeMapPanel'));
+  const catalogBody = app.slice(app.indexOf('function catalog(){'), app.indexOf('function activeSubcategoryBar'));
+  assert.match(styles, /\.home-hero\{[^}]*linear-gradient/);
+  assert.doesNotMatch(homeBody, /homeMapPanel|homeMap/);
+  assert.match(homeBody, /<h2>Категории<\/h2>/);
+  assert.match(homeBody, /categories\.map\(categoryCard\)/);
+  assert.doesNotMatch(homeBody, /Популярные категории|Все категории|Специалисты рядом/);
+  assert.match(app, /categoryTone/);
+  assert.match(app, /category\.subs\.push\('Другое'\)/);
+  assert.match(app, /function selectIntent[^\n]+state\.view='map';go\('catalog'\)/);
+  assert.doesNotMatch(catalogBody, /Поиск рядом|category-scroll|activeSubcategoryBar/);
+  assert.match(catalogBody, /catalog-actions/);
+  assert.match(app, /minRating/);
+  assert.match(app, /Рейтинг специалиста/);
+  assert.doesNotMatch(app, /Только с подтверждённой личностью/);
+  assert.match(app, /Выберите направление внутри основной категории/);
+  assert.match(app, /Войдите, чтобы общаться и помогать/);
+  assert.match(app, /Задачи и предложения помощи связаны с профилями только реальных пользователей/);
+  assert.match(app, /Вход и регистрация/);
+  assert.doesNotMatch(app, /и найти человека по ФИО/);
 });
 
 test('requested home, navigation and authentication UI is present', async () => {
