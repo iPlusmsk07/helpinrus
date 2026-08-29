@@ -80,13 +80,19 @@ test('home and catalog follow the requested two-screen flow', async () => {
   const homeBody = app.slice(app.indexOf('function home(){'), app.indexOf('function homeMapPanel'));
   const catalogBody = app.slice(app.indexOf('function catalog(){'), app.indexOf('function activeSubcategoryBar'));
   assert.match(styles, /\.home-hero\{[^}]*background:var\(--brand\)/);
+  assert.match(styles, /--intent-green:#13795b/);
+  assert.match(styles, /\.intent-card\.find,\.intent-card\.offer\{background:var\(--intent-green\)\}/);
   assert.doesNotMatch(homeBody, /homeMapPanel|homeMap/);
   assert.match(homeBody, /<h2>Категории<\/h2>/);
   assert.match(homeBody, /visible\.map\(categoryCard\)/);
   assert.doesNotMatch(homeBody, /Популярные категории|Все категории|Специалисты рядом/);
   assert.match(app, /categoryTone/);
   assert.match(app, /category\.subs\.push\('Другое'\)/);
+  assert.match(app, /showOtherSearch\(id\)/);
+  assert.match(app, /state\.query=state\.otherKeywords/);
   assert.match(app, /function selectIntent[^\n]+state\.view='list'/);
+  assert.match(app, /function showAllSpecialists[^\n]+state\.view='list'/);
+  assert.match(app, /function go[^\n]+render\(\);scrollPageTop\(\)/);
   assert.doesNotMatch(catalogBody, /Поиск рядом|category-scroll|activeSubcategoryBar/);
   assert.match(catalogBody, /catalog-actions/);
   assert.match(app, /minRating/);
@@ -128,6 +134,15 @@ test('site-wide search, creation and profile changes are present', async () => {
   assert.match(app, /profileSection\('Основные'/);
   assert.match(styles, /--green:#8f1d46/);
   assert.match(styles, /\.home-specialist-grid/);
+  assert.match(styles, /h1,h2\{font-size:36px\}/);
+  assert.match(styles, /\.section-heading h2\{color:var\(--ink\);font-size:36px\}/);
+  assert.match(styles, /\.section-heading p\{margin-top:4px;font-size:24px\}/);
+  assert.match(styles, /\.home-specialist-grid \.specialist-card\{width:80%;justify-self:center\}/);
+  assert.match(styles, /@media\(max-width:720px\)[\s\S]*\.home-specialist-grid \.specialist-card\{width:100%\}/);
+  assert.match(app, /emptyState\('Ничего не найден','Измените категорию, расстояние или поисковый запрос\.'\)/);
+  assert.doesNotMatch(app, /<div class="empty-state"><span>/);
+  const profileBody = app.slice(app.indexOf('function profile(){'), app.indexOf('function profileSection'));
+  assert.ok(profileBody.indexOf('Сбросить пароль') < profileBody.indexOf('Конфиденциальность'));
 });
 
 test('requested home, navigation and authentication UI is present', async () => {
@@ -138,7 +153,10 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Яндекс/);
   assert.match(app, /Госуслуги/);
   assert.match(app, /Мои избранные/);
-  assert.match(app, /demoFavoritesKey/);
+  assert.match(app, /localFavoritesKey/);
+  assert.match(app, /function arg\(value\)\{return escapeHtml\(JSON\.stringify\(value\)\)\}/);
+  assert.match(app, /!state\.session\|\|String\(id\)\.startsWith\('demo-'\)/);
+  assert.match(app, /saveLocalFavorites\(\)/);
   assert.match(styles, /\.desktop-nav/);
   assert.match(styles, /\.nav-chat-icon/);
   assert.doesNotMatch(app, /class="top-actions"/);
