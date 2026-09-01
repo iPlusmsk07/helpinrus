@@ -223,11 +223,11 @@ test('release assets bypass stale browser caches on the IP production site', asy
   const html = await read('index.html');
   const app = await read('app.js');
   const worker = await read('sw.js');
-  assert.match(html, /styles\.css\?v=20260901-1/);
-  assert.match(html, /app\.js\?v=20260901-1/);
-  assert.match(app, /sw\.js\?v=20260901-1/);
+  assert.match(html, /styles\.css\?v=20260901-2/);
+  assert.match(html, /app\.js\?v=20260901-2/);
+  assert.match(app, /sw\.js\?v=20260901-2/);
   assert.match(app, /updateViaCache:'none'/);
-  assert.match(worker, /pomogay-ip-cache-refresh-12/);
+  assert.match(worker, /pomogay-ip-cache-refresh-13/);
 });
 
 test('client does not persist profile, tasks, messages or trust state', async () => {
