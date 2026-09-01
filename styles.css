@@ -43,9 +43,9 @@ p{color:var(--muted)}
 .desktop-nav button{min-width:88px;height:46px;border:0;border-radius:7px;background:transparent;color:rgba(255,255,255,.82);display:flex;align-items:center;justify-content:center;gap:7px;padding:0 12px;cursor:pointer}
 .desktop-nav button:hover{background:rgba(255,255,255,.1);color:#fff}
 .desktop-nav button.active{background:#fff;color:var(--brand);box-shadow:0 5px 14px rgba(55,4,23,.18);font-weight:800}
-.desktop-nav button span{display:grid;place-items:center;font-size:19px;line-height:1}
+.desktop-nav button span{display:grid;place-items:center;font-size:28px;line-height:1}
 .desktop-nav button small{font-size:13px}
-.nav-chat-icon,.nav-profile-icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav-chat-icon,.nav-profile-icon,.search-icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .location-control{height:42px;max-width:260px;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:0 14px;cursor:pointer;white-space:nowrap;overflow:hidden}
 .location-control span:last-child{overflow:hidden;text-overflow:ellipsis}
 .avatar{display:inline-grid;place-items:center;flex:0 0 auto;background-color:#e9edf3;background-position:center;background-size:cover;border-radius:50%;color:var(--brand-dark);font-weight:800;overflow:hidden}
@@ -85,7 +85,7 @@ p{color:var(--muted)}
 .intent-card.selected{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--intent-green)}
 .intent-card.find .intent-icon,.intent-card.offer .intent-icon{background:rgba(255,255,255,.16);color:#fff}
 .intent-icon{width:52px;height:52px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3);border-radius:50%;font-size:28px}
-.helping-hand-icon{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.intent-icon .search-icon{width:31px;height:31px;stroke-width:2.2}
 .intent-card b,.intent-card small{display:block}
 .intent-card b{font-size:20px;margin-bottom:4px}
 .intent-card small{color:rgba(255,255,255,.82);font-size:14px}
@@ -106,6 +106,13 @@ p{color:var(--muted)}
 .map-zoom-stack button+button{border-top:1px solid var(--line)}
 .map-zoom-stack button:hover{background:var(--brand-soft);color:var(--brand)}
 .map-fallback-note{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;margin:0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.94);box-shadow:0 4px 16px rgba(23,32,51,.14);font-size:11px;color:var(--muted)}
+.map-user-marker,.map-selected-marker,.map-person-marker{position:absolute;z-index:4;transform:translate(-50%,-100%);width:30px;height:38px;border:3px solid #fff;border-radius:50% 50% 50% 8px;box-shadow:0 3px 8px rgba(23,32,51,.35)}
+.map-user-marker{left:50%;top:50%;background:#16a34a;transform:translate(-50%,-100%) rotate(-45deg)}
+.map-user-marker::after,.map-selected-marker::after,.map-person-marker::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;border:3px solid #fff;border-radius:50%;transform:translate(-50%,-50%)}
+.map-person-marker{border-color:#fff;background:#e2243d;cursor:pointer;transform:translate(-50%,-100%) rotate(-45deg)}
+.map-person-marker span{position:absolute;inset:0;transform:rotate(45deg)}
+.map-person-marker:hover{z-index:6;filter:brightness(.92);scale:1.08}
+.map-selected-marker{background:#16a34a;transform:translate(-50%,-100%) rotate(-45deg)}
 .map-controls{padding:22px;display:flex;flex-direction:column;gap:22px;border-left:1px solid var(--line)}
 .range-field{display:flex;flex-direction:column;gap:10px;color:var(--ink)}
 .range-field>span{display:flex;justify-content:space-between;gap:16px;font-size:14px}
@@ -150,7 +157,7 @@ input[type="range"]{width:100%;accent-color:var(--brand)}
 .card-meta{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px;margin-top:8px}
 .card-price{font-weight:800;margin-top:12px}
 .favorite-button{position:absolute;right:10px;top:10px;width:36px;height:36px;border:1px solid rgba(255,255,255,.7);border-radius:50%;background:rgba(255,255,255,.93);font-size:21px;cursor:pointer}
-.favorite-button.active{color:var(--brand);background:var(--brand-soft)}
+.favorite-button.active{color:#e21d3d;border-color:#f2a6b3;background:#fff1f3}
 .primary-button,.secondary-button,.danger-button{min-height:44px;border-radius:8px;padding:10px 16px;font-weight:750;cursor:pointer}
 .primary-button{border:1px solid var(--brand);background:var(--brand);color:#fff;box-shadow:0 5px 13px rgba(143,29,70,.16)}
 .primary-button:hover{background:var(--brand-dark)}
@@ -323,7 +330,6 @@ input[type="range"]{width:100%;accent-color:var(--brand)}
 .modal{width:min(720px,100%);max-height:min(880px,calc(100vh - 40px));overflow:hidden;background:#fff;border-radius:8px;box-shadow:0 26px 80px rgba(0,0,0,.25);transform:translateY(18px);transition:transform .18s}
 .modal-wrap.open .modal{transform:translateY(0)}
 .modal-top{height:48px;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:1px solid var(--line)}
-.modal-handle{width:42px;height:5px;border:0;border-radius:999px;background:#c7ccd4;cursor:pointer}
 .modal-close{position:absolute;right:10px;top:7px;width:34px;height:34px;border:0;border-radius:50%;background:var(--surface-alt);font-size:24px;cursor:pointer}
 .modal-content{max-height:calc(100vh - 88px);overflow:auto;padding:22px}
 .modal-content>h2{font-size:24px}
@@ -337,6 +343,7 @@ input[type="range"]{width:100%;accent-color:var(--brand)}
 .subcategory-list i{font-style:normal;color:var(--muted)}
 .modal-map{height:470px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .modal-actions{margin-top:12px;justify-content:flex-end}
+.native-picker{cursor:pointer;color-scheme:light}
 .muted{color:var(--muted)}
 .notice{background:var(--brand-soft);border:1px solid #d9a4b8;border-radius:8px;padding:13px 14px;margin:12px 0;color:var(--brand)}
 .notice.subtle{background:var(--surface-alt);border-color:var(--line);color:var(--muted)}

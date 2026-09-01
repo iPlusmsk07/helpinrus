@@ -1,4 +1,4 @@
-const CACHE='pomogay-home-discovery-polish-10';
+const CACHE='pomogay-map-interactions-11';
 const ASSETS=['./','index.html','styles.css','app.js','native-bundle.js','config.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','specialist-portraits-v1.png'];
 
 self.addEventListener('install',event=>{

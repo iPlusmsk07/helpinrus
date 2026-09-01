@@ -71,7 +71,29 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.match(app, /map-zoom-stack/);
   assert.doesNotMatch(app, /button \"Пробки\"|trafficControl|rulerControl/);
   assert.match(app, /pm2rdm/);
+  assert.match(app, /class="map-user-marker"/);
+  assert.match(app, /class="map-person-marker"/);
+  assert.match(app, /openService\(\$\{arg\(item\.id\)\}\)/);
+  assert.match(app, /Нажмите на карту, чтобы отметить нужное место/);
+  assert.match(app, /preset:'islands#greenIcon'/);
+  assert.match(app, /preset:'islands#redIcon'/);
   assert.match(netlify, /api-maps\.yandex\.ru/);
+});
+
+test('navigation, modals, favorites and native pickers match the polished interaction', async () => {
+  const app = await read('app.js');
+  const styles = await read('styles.css');
+  assert.match(app, /const searchIcon=/);
+  assert.doesNotMatch(app, /helping-hand-icon/);
+  assert.match(styles, /\.desktop-nav button span\{[^}]*font-size:28px/);
+  assert.doesNotMatch(app, /modal-handle/);
+  assert.doesNotMatch(styles, /\.modal-handle/);
+  assert.match(styles, /\.favorite-button\.active\{color:#e21d3d/);
+  assert.match(app, /\$\{favorite\?'♥':'♡'\}/);
+  assert.match(app, /class="native-picker" name="date" type="date"/);
+  assert.match(app, /class="native-picker" name="time" type="time"/);
+  assert.match(app, /function openNativePicker\(input\)/);
+  assert.match(app, /input\.showPicker\?\.\(\)/);
 });
 
 test('home and catalog follow the requested two-screen flow', async () => {
