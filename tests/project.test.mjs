@@ -75,8 +75,12 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.match(app, /class="map-person-marker"/);
   assert.match(app, /openService\(\$\{arg\(item\.id\)\}\)/);
   assert.match(app, /Нажмите на карту, чтобы отметить нужное место/);
-  assert.match(app, /preset:'islands#greenIcon'/);
+  assert.doesNotMatch(app, /preset:'islands#greenIcon'/);
   assert.match(app, /preset:'islands#redIcon'/);
+  assert.match(app, /classList\.add\('draggable-map'\)/);
+  assert.match(app, /onpointerdown/);
+  assert.match(app, /onpointermove/);
+  assert.match(app, /onpointerup/);
   assert.match(netlify, /api-maps\.yandex\.ru/);
 });
 
@@ -90,10 +94,13 @@ test('navigation, modals, favorites and native pickers match the polished intera
   assert.doesNotMatch(styles, /\.modal-handle/);
   assert.match(styles, /\.favorite-button\.active\{color:#e21d3d/);
   assert.match(app, /\$\{favorite\?'♥':'♡'\}/);
-  assert.match(app, /class="native-picker" name="date" type="date"/);
-  assert.match(app, /class="native-picker" name="time" type="time"/);
-  assert.match(app, /function openNativePicker\(input\)/);
-  assert.match(app, /input\.showPicker\?\.\(\)/);
+  assert.match(app, /function openWheelPicker\(kind\)/);
+  assert.match(app, /День \/ Месяц \/ Год/);
+  assert.match(app, /24-часовой формат/);
+  assert.match(app, /Array\.from\(\{length:24\}/);
+  assert.match(app, /function bindWheelLists\(\)/);
+  assert.match(app, /addEventListener\('scroll'/);
+  assert.match(styles, /\.wheel-picker/);
 });
 
 test('home and catalog follow the requested two-screen flow', async () => {
@@ -159,8 +166,10 @@ test('site-wide search, creation and profile changes are present', async () => {
   assert.match(styles, /h1,h2\{font-size:36px\}/);
   assert.match(styles, /\.section-heading h2\{color:var\(--ink\);font-size:36px\}/);
   assert.match(styles, /\.section-heading p\{margin-top:4px;font-size:24px\}/);
-  assert.match(styles, /\.home-specialist-grid \.specialist-card\{width:80%;justify-self:center\}/);
-  assert.match(styles, /@media\(max-width:720px\)[\s\S]*\.home-specialist-grid \.specialist-card\{width:100%\}/);
+  assert.match(styles, /\.specialist-grid \.specialist-card\{width:70%;justify-self:center\}/);
+  assert.match(styles, /\.map-results \.specialist-card\{width:70%;justify-self:center\}/);
+  assert.match(styles, /@media\(max-width:720px\)[\s\S]*\.specialist-grid \.specialist-card,\.map-results \.specialist-card\{width:100%\}/);
+  assert.match(styles, /\.desktop-nav button small\{font-size:28px/);
   assert.match(app, /emptyState\('Ничего не найден','Измените категорию, расстояние или поисковый запрос\.'\)/);
   assert.doesNotMatch(app, /<div class="empty-state"><span>/);
   const profileBody = app.slice(app.indexOf('function profile(){'), app.indexOf('function profileSection'));
@@ -223,11 +232,11 @@ test('release assets bypass stale browser caches on the IP production site', asy
   const html = await read('index.html');
   const app = await read('app.js');
   const worker = await read('sw.js');
-  assert.match(html, /styles\.css\?v=20260901-2/);
-  assert.match(html, /app\.js\?v=20260901-2/);
-  assert.match(app, /sw\.js\?v=20260901-2/);
+  assert.match(html, /styles\.css\?v=20260902-1/);
+  assert.match(html, /app\.js\?v=20260902-1/);
+  assert.match(app, /sw\.js\?v=20260902-1/);
   assert.match(app, /updateViaCache:'none'/);
-  assert.match(worker, /pomogay-ip-cache-refresh-13/);
+  assert.match(worker, /pomogay-ip-cache-refresh-14/);
 });
 
 test('client does not persist profile, tasks, messages or trust state', async () => {
