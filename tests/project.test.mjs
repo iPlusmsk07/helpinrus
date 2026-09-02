@@ -95,6 +95,8 @@ test('navigation, modals, favorites and native pickers match the polished intera
   assert.match(styles, /\.favorite-button\.active\{color:#e21d3d/);
   assert.match(app, /\$\{favorite\?'♥':'♡'\}/);
   assert.match(app, /function openWheelPicker\(kind\)/);
+  assert.doesNotMatch(app, /Object\.assign\(window,\{[^}]*openNativePicker/);
+  assert.match(app, /Object\.assign\(window,\{[^}]*openWheelPicker[^}]*confirmWheelPicker/);
   assert.match(app, /День \/ Месяц \/ Год/);
   assert.match(app, /24-часовой формат/);
   assert.match(app, /Array\.from\(\{length:24\}/);
