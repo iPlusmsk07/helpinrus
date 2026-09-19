@@ -1,5 +1,5 @@
-const CACHE='pomogay-ip-cache-refresh-15';
-const ASSETS=['./','index.html','styles.css?v=20260918-1','app.js?v=20260918-1','native-bundle.js?v=20260918-1','config.js?v=20260918-1','manifest.webmanifest?v=20260918-1','icon-192.png','icon-512.png','apple-touch-icon.png?v=20260918-1','specialist-portraits-v1.png'];
+const CACHE='pomogay-ip-cache-refresh-16';
+const ASSETS=['./','index.html','styles.css?v=20260919-1','app.js?v=20260919-1','native-bundle.js?v=20260919-1','config.js?v=20260919-1','manifest.webmanifest?v=20260919-1','icon-192.png','icon-512.png','apple-touch-icon.png?v=20260919-1','specialist-portraits-v1.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
