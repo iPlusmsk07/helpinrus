@@ -203,8 +203,16 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Госуслуги/);
   assert.match(app, /Мои избранные/);
   assert.match(app, /localFavoritesKey/);
+  assert.match(app, /function localFavoritesStorageKey\(userId\)/);
   assert.match(app, /function arg\(value\)\{return escapeHtml\(JSON\.stringify\(value\)\)\}/);
-  assert.match(app, /!state\.session\|\|String\(id\)\.startsWith\('demo-'\)/);
+  assert.match(app, /function requireSession\(\)\{if\(state\.session\)return true/);
+  assert.match(app, /async function toggleFavorite\(id\)\{if\(!requireSession\(\)\)return/);
+  assert.match(app, /function contactService\(ownerId\)\{if\(!requireSession\(\)\)return/);
+  assert.match(app, /async function startDirectChat\(otherUser\)\{if\(!requireSession\(\)\)return/);
+  assert.match(app, /async function openConversation\(id\)\{if\(!requireSession\(\)\)return/);
+  assert.match(app, /async function sendMessage\(event\)\{event\.preventDefault\(\);if\(!requireSession\(\)\)return/);
+  assert.match(app, /else state\.favorites=\[\]/);
+  assert.doesNotMatch(app, /state\.favorites=loadLocalFavorites\(\)/);
   assert.match(app, /saveLocalFavorites\(\)/);
   assert.match(styles, /\.desktop-nav/);
   assert.match(app, /class="nav-icon nav-chat-icon"/);
@@ -244,12 +252,19 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Signup error[^\n]+friendlySignupError\(error,pendingSignup\?\.method\)/);
   assert.doesNotMatch(app, /Подтвердите email/);
   assert.doesNotMatch(app, /Мы отправили ссылку/);
-  assert.match(app, /телефон или email — отправим одноразовый код/i);
+  assert.match(app, /Введите email — отправим ссылку для создания нового пароля/);
+  assert.match(app, /getPasswordRecoveryRedirectUrl/);
+  assert.match(app, /searchParams\.set\('auth','recovery'\)/);
+  assert.match(app, /resetPasswordForEmail/);
+  assert.match(app, /showPasswordResetEmailSent/);
   assert.match(app, /signInWithOtp/);
   assert.match(app, /verifyPasswordResetCode/);
-  assert.match(app, /type:'email'/);
   assert.match(app, /type:'sms'/);
-  assert.doesNotMatch(app, /resetPasswordForEmail/);
+  assert.match(app, /function hasAuthCallbackParams/);
+  assert.match(app, /callbackKeys=\['code','error','error_code','error_description'\]/);
+  assert.match(app, /if\(hasAuthCallbackParams\(\)\)/);
+  assert.match(app, /if\(isRecovery\)showNewPassword\(\)/);
+  assert.match(app, /Сервис аккаунтов временно недоступен\. Попробуйте позже\./);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
@@ -262,11 +277,11 @@ test('release assets bypass stale browser caches on the IP production site', asy
   const html = await read('index.html');
   const app = await read('app.js');
   const worker = await read('sw.js');
-  assert.match(html, /styles\.css\?v=20260918-1/);
-  assert.match(html, /app\.js\?v=20260918-1/);
-  assert.match(app, /sw\.js\?v=20260918-1/);
+  assert.match(html, /styles\.css\?v=20260919-1/);
+  assert.match(html, /app\.js\?v=20260919-1/);
+  assert.match(app, /sw\.js\?v=20260919-1/);
   assert.match(app, /updateViaCache:'none'/);
-  assert.match(worker, /pomogay-ip-cache-refresh-15/);
+  assert.match(worker, /pomogay-ip-cache-refresh-16/);
 });
 
 test('client does not persist profile, tasks, messages or trust state', async () => {
