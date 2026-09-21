@@ -17,12 +17,14 @@
 4. Запустить: pnpm build
 5. Проверить, что в www находятся только публичные web-файлы.
 
-NETLIFY
-- Настройки находятся в netlify.toml.
-- Build command: node scripts/prepare-www.mjs
-- Publish directory: www
-- SQL, README, package.json и внутренние документы больше не публикуются.
-- Production нельзя менять без успешного Deploy Preview и отдельного подтверждения владельца.
+GITHUB И PRODUCTION
+- Единственный источник production-кода — ветка main GitHub-репозитория helpinrus.
+- Сборка: node scripts/prepare-www.mjs
+- Публичный каталог сборки: www
+- SQL, README, package.json и внутренние документы не публикуются.
+- После merge защищённый deploy на 201.51.4.212 запускает тесты, собирает www и
+  атомарно переключает /var/www/helpinrus на новый релиз.
+- Production нельзя менять в обход GitHub и повторяемого deploy-скрипта.
 
 PRODUCTION SSH
 - Сервер: 201.51.4.212

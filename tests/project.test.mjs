@@ -60,7 +60,6 @@ test('frontend has no third-party authentication runtime', async () => {
 test('maps use Yandex and do not load Leaflet', async () => {
   const html = await read('index.html');
   const app = await read('app.js');
-  const netlify = await read('netlify.toml');
   assert.doesNotMatch(html, /leaflet/i);
   assert.doesNotMatch(app, /openstreetmap|window\.L|L\.map/i);
   assert.match(app, /api-maps\.yandex\.ru\/2\.1/);
@@ -81,7 +80,6 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.match(app, /onpointerdown/);
   assert.match(app, /onpointermove/);
   assert.match(app, /onpointerup/);
-  assert.match(netlify, /api-maps\.yandex\.ru/);
 });
 
 test('navigation, modals, favorites and native pickers match the polished interaction', async () => {
@@ -354,18 +352,18 @@ test('public config contains no authentication secret', async () => {
   assert.match(config, /API_BASE:\s*''/);
 });
 
-test('Netlify config includes core security headers', async () => {
-  const config = await read('netlify.toml');
-  assert.match(config, /publish = "www"/);
-  for (const header of [
-    'Content-Security-Policy',
-    'Permissions-Policy',
-    'Referrer-Policy',
-    'X-Content-Type-Options',
-    'X-Frame-Options'
-  ]) {
-    assert.match(config, new RegExp(header));
-  }
+test('production Nginx proxies auth only to the local backend', async () => {
+  const snippet = await read('ops/nginx-helpinrus-auth-api.conf');
+  const installer = await read('ops/install-auth-backend.sh');
+  assert.match(snippet, /location \^~ \/api\/auth\//);
+  assert.match(snippet, /proxy_pass http:\/\/127\.0\.0\.1:8787/);
+  assert.match(snippet, /client_max_body_size 16k/);
+  assert.match(snippet, /proxy_set_header X-Forwarded-Proto \$scheme/);
+  assert.match(snippet, /proxy_connect_timeout 3s/);
+  assert.match(snippet, /proxy_read_timeout 120s/);
+  assert.match(installer, /nginx -t/);
+  assert.match(installer, /systemctl reload nginx/);
+  assert.match(installer, /patch_nginx\.py/);
 });
 
 test('GitHub checks run with read-only permissions and a pinned action', async () => {

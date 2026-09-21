@@ -5,7 +5,6 @@
 - Production: `https://201.51.4.212`
 - Production SSH: `root@201.51.4.212` (аутентификация по ключу)
 - Production web root: `/var/www/helpinrus`
-- Netlify deployment: https://helpinrus.netlify.app
 - GitHub: https://github.com/iPlusmsk07/helpinrus
 - Supabase project ref: `llnjgyehxsogjmwegnyf`
 - Production branch: `main`
@@ -20,7 +19,7 @@
 - Supabase используется для Auth, PostgREST, PostgreSQL/RLS и планируемого Realtime.
 - PWA состоит из manifest и Service Worker.
 - Capacitor `7.6.8` подготовлен для web-синхронизации; нативные проекты пока не добавлены.
-- Netlify собирает каталог `www` скриптом `scripts/prepare-www.mjs`.
+- Production deploy собирает каталог `www` скриптом `scripts/prepare-www.mjs` и атомарно публикует его на сервере.
 
 ## Публичная сборка
 
@@ -87,11 +86,11 @@ Lockfile обязателен. Install scripts при аудиторской у�
 - пароль базы;
 - `service_role` key;
 - access/refresh tokens;
-- personal access tokens GitHub/Netlify/Supabase;
+- personal access tokens GitHub/Supabase и SSH-ключи production-сервера;
 - recovery codes;
 - незашифрованные дампы и персональные документы.
 
-Секретные данные не должны появляться в Git, Deploy Preview, документах, снимках экрана и сообщениях.
+Секретные данные не должны появляться в Git, каталоге `www`, документах, снимках экрана и сообщениях.
 
 ## Команды проверки
 

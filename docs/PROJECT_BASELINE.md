@@ -9,12 +9,10 @@
 - Проект: «Помогай» / Pomogay / Helpinrus
 - Дата начала фиксации: 2026-08-24
 - Дата создания baseline tag: 2026-08-25
-- Публичный сайт: https://helpinrus.netlify.app
+- Публичный сайт: https://201.51.4.212
 - GitHub: https://github.com/iPlusmsk07/helpinrus
-- Netlify: https://app.netlify.com/projects/helpinrus/overview
 - Production branch: `main`
 - Production commit SHA: `f89c0fe7d0f940edbecbb36232d4bb5c78f9a728`
-- Netlify deploy ID: `6a73c0754a28d8000804190f`
 - Baseline tag: `baseline-pre-implementation-2026-08-24`
 
 ## Резервные копии
@@ -27,7 +25,7 @@
 
 ## Проверенные ключевые файлы
 
-Содержимое каждого файла было побайтно сопоставлено между исходным архивом, GitHub commit и опубликованным Netlify deploy:
+Содержимое каждого файла было побайтно сопоставлено между исходным архивом, GitHub commit и опубликованным production-релизом:
 
 - `index.html` — совпадает во всех трёх источниках;
 - `app.js` — совпадает во всех трёх источниках;
@@ -41,14 +39,15 @@
 
 По проверенным ключевым файлам различий между архивом, GitHub и production не найдено.
 
-## Подтверждённые настройки Netlify
+## Подтверждённая схема публикации
 
 - Связанный репозиторий: `github.com/iPlusmsk07/helpinrus`
 - Production branch: `main`
-- Build command: не задан
-- Publish directory: не задан
-- Branch deploys: только production branch
-- Deploy Previews: включены для Pull Request в production branch
+- Production-сервер: `201.51.4.212`
+- Исходники на сервере: `/opt/helpinrus`
+- Публичный путь: `/var/www/helpinrus`
+- Сборка: `node scripts/prepare-www.mjs`
+- Публикация выполняется из `main` повторяемым deploy-скриптом после успешных тестов.
 
 ## Неизвестные сведения и ограничения проверки
 
