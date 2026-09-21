@@ -1,7 +1,6 @@
-// Скопируйте в config.js и вставьте публичные данные проекта Supabase.
+// Скопируйте в config.js. Секреты в этом файле запрещены.
 window.POMOGAY_CONFIG = {
-  SUPABASE_URL: 'https://YOUR_PROJECT.supabase.co',
-  SUPABASE_ANON_KEY: 'YOUR_PUBLIC_ANON_KEY'
+  API_BASE: ''
 };
 Object.assign(window.POMOGAY_CONFIG, {
   YANDEX_MAPS_API_KEY: '',

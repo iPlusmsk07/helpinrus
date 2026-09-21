@@ -5,6 +5,8 @@ www/
 .env.*
 !.env.example
 *.log
+__pycache__/
+*.py[cod]
 
 # Local Netlify folder
 .netlify

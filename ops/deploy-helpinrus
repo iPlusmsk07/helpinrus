@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# This worker is intentionally executed from the exact commit selected by the
+# stable /usr/local/sbin/deploy-helpinrus launcher. It never fetches or follows
+# a moving branch itself.
+if [ "$#" -ne 1 ]; then
+  echo "Usage: deploy-helpinrus <pinned-commit>" >&2
+  exit 2
+fi
+
+repo=/opt/helpinrus
+public=/var/www/helpinrus
+releases=/var/www/helpinrus-releases
+target_sha=$1
+staged_release=
+new_release=
+previous_public_target=
+public_switched=0
+next_link=
+
+arm_signal_traps() {
+  trap 'fail_deploy 130' INT
+  trap 'fail_deploy 143' TERM
+}
+
+restore_public_link() {
+  local restore_link
+
+  if [ "$public_switched" -ne 1 ]; then
+    return
+  fi
+  restore_link="/var/www/.helpinrus-restore.$$"
+  if [ -n "$previous_public_target" ]; then
+    ln -s "$previous_public_target" "$restore_link"
+    mv -Tf "$restore_link" "$public"
+  elif [ -L "$public" ]; then
+    rm -f -- "$public"
+  fi
+  public_switched=0
+}
+
+cleanup_stage() {
+  if [ -n "$next_link" ] && [ -L "$next_link" ]; then
+    rm -f -- "$next_link"
+  fi
+  if [ -n "$staged_release" ] && [ -d "$staged_release" ]; then
+    case "$staged_release" in
+      "$releases"/.tmp-*) rm -rf -- "$staged_release" ;;
+    esac
+  fi
+}
+
+fail_deploy() {
+  local status=$1
+  trap - ERR INT TERM
+  set +e
+  restore_public_link
+  cleanup_stage
+  logger -t deploy-helpinrus "deployment of $target_sha failed; public release restored"
+  exit "$status"
+}
+
+trap 'fail_deploy $?' ERR
+arm_signal_traps
+
+cd "$repo"
+actual_sha=$(git rev-parse 'HEAD^{commit}')
+if [ "$actual_sha" != "$target_sha" ]; then
+  echo "Pinned commit mismatch: expected $target_sha, checkout is $actual_sha" >&2
+  exit 1
+fi
+
+node --check app.js
+node --check sw.js
+node --check native-bundle.js
+node --check scripts/prepare-www.mjs
+node --test tests/*.test.mjs
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ops/tests -v
+node scripts/prepare-www.mjs
+
+# The SMTP probe runs with the same EnvironmentFile, user, Python, and working
+# directory as the API service. A configured-but-unreachable provider blocks
+# the release before anything is switched in /var/www.
+systemctl reset-failed helpinrus-auth-smtp-check.service >/dev/null 2>&1 || true
+systemctl start helpinrus-auth-smtp-check.service
+
+systemctl restart helpinrus-auth.service
+for attempt in 1 2 3 4 5; do
+  health=$(curl --fail --silent --show-error \
+    --connect-timeout 2 --max-time 5 \
+    http://127.0.0.1:8787/api/auth/health || true)
+  case "$health" in
+    *'"status":"ok"'*'"email":"configured"'*) break ;;
+  esac
+  if [ "$attempt" -eq 5 ]; then
+    systemctl status --no-pager helpinrus-auth.service >&2 || true
+    echo "Auth API or password-reset email is not ready: $health" >&2
+    exit 1
+  fi
+  sleep 1
+done
+
+install -d -m 0755 -o root -g root "$releases"
+staged_release=$(mktemp -d "$releases/.tmp-${target_sha}.XXXXXX")
+chmod 0755 "$staged_release"
+rsync -a --delete "$repo/www/" "$staged_release/"
+printf '%s\n' "$target_sha" > "$staged_release/.deployed-commit"
+chown -R www-data:www-data "$staged_release"
+
+# Reject an incomplete or unreadable bundle before Nginx can observe it. Keep
+# the same checks after cutover as a guard against a broken compatibility link.
+test "$(cat "$staged_release/.deployed-commit")" = "$target_sha"
+test -s "$staged_release/index.html"
+/usr/sbin/runuser -u www-data -- /usr/bin/test -r "$staged_release/index.html"
+
+new_release="$releases/${target_sha}-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+mv "$staged_release" "$new_release"
+staged_release=
+
+# One-time compatibility migration. Existing Nginx configurations can keep
+# using /var/www/helpinrus: the physical directory is retained as the first
+# versioned release and that path becomes a symlink to it.
+if [ -L "$public" ]; then
+  previous_public_target=$(readlink -f "$public")
+  if [ ! -d "$previous_public_target" ]; then
+    echo "Existing public symlink does not resolve to a directory: $public" >&2
+    exit 1
+  fi
+elif [ -d "$public" ]; then
+  legacy_release="$releases/legacy-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+  compatibility_link="/var/www/.helpinrus-compat.$$"
+  ln -s "$legacy_release" "$compatibility_link"
+
+  # Replacing a non-empty directory with a symlink needs two renames. Ignore
+  # INT/TERM only for this very short critical section so the trap cannot leave
+  # the public path absent between them. Explicit command failures still restore
+  # the original directory below.
+  trap '' INT TERM
+  if ! mv "$public" "$legacy_release"; then
+    rm -f -- "$compatibility_link"
+    arm_signal_traps
+    exit 1
+  fi
+  if ! mv -T "$compatibility_link" "$public"; then
+    mv "$legacy_release" "$public"
+    rm -f -- "$compatibility_link"
+    arm_signal_traps
+    exit 1
+  fi
+  arm_signal_traps
+  previous_public_target=$legacy_release
+elif [ -e "$public" ]; then
+  echo "Public path exists but is neither a directory nor a symlink: $public" >&2
+  exit 1
+fi
+
+next_link="/var/www/.helpinrus-next.$$"
+ln -s "$new_release" "$next_link"
+# Mark the transaction before the atomic rename. If INT/TERM arrives before the
+# rename, restoring the previous symlink is harmless; if it arrives after, the
+# trap can no longer miss the completed switch.
+public_switched=1
+mv -Tf "$next_link" "$public"
+next_link=
+
+# Resolve through the compatibility path, not directly through the release,
+# so a broken symlink or unreadable release cannot be recorded as deployed.
+test "$(cat "$public/.deployed-commit")" = "$target_sha"
+test -s "$public/index.html"
+/usr/sbin/runuser -u www-data -- /usr/bin/test -r "$public/index.html"
+
+logger -t deploy-helpinrus "deployed $target_sha as $new_release"
+public_switched=0
+trap - ERR INT TERM

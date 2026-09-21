@@ -1,5 +1,5 @@
-const CACHE='pomogay-ip-cache-refresh-16';
-const ASSETS=['./','index.html','styles.css?v=20260919-1','app.js?v=20260919-1','native-bundle.js?v=20260919-1','config.js?v=20260919-1','manifest.webmanifest?v=20260919-1','icon-192.png','icon-512.png','apple-touch-icon.png?v=20260919-1','specialist-portraits-v1.png'];
+const CACHE='pomogay-ip-cache-refresh-17';
+const ASSETS=['./','index.html','styles.css?v=20260919-2','app.js?v=20260919-2','native-bundle.js?v=20260919-2','config.js?v=20260919-2','manifest.webmanifest?v=20260919-2','icon-192.png','icon-512.png','apple-touch-icon.png?v=20260919-2','specialist-portraits-v1.png'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
@@ -22,8 +22,8 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   const request=event.request;
   const url=new URL(request.url);
-  // Никогда не кэшируем Auth/REST/Storage и другие внешние ответы.
-  if(url.origin!==self.location.origin)return;
+  // API и внешние ответы всегда идут напрямую в сеть и никогда не попадают в Cache Storage.
+  if(url.origin!==self.location.origin||url.pathname.startsWith('/api/'))return;
   event.respondWith((async()=>{
     try{
       const response=await fetch(request);
