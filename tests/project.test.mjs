@@ -276,6 +276,8 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /apiRequest\('\/api\/auth\/login'/);
   assert.match(app, /apiRequest\('\/api\/auth\/signup'/);
   assert.match(app, /apiRequest\('\/api\/auth\/logout'/);
+  assert.match(app, /contentType!=='application\/json'/);
+  assert.match(app, /failure\.code='invalid_api_response'/);
   assert.doesNotMatch(app, /sb\.auth\./);
 });
 

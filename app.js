@@ -331,7 +331,12 @@ async function apiRequest(path,{method='GET',body}={}){
   if(body!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(body)}
   let response;
   try{response=await fetch(`${apiBase}${path}`,options)}catch(error){const failure=new Error('network_error');failure.code='network_error';failure.cause=error;throw failure}
-  let payload=null;try{payload=response.status===204?null:await response.json()}catch{}
+  let payload=null;
+  if(response.status!==204){
+    const contentType=String(response.headers.get('Content-Type')||'').split(';',1)[0].trim().toLowerCase();
+    if(contentType!=='application/json'){const failure=new Error('invalid_api_response');failure.code='invalid_api_response';failure.status=response.status;throw failure}
+    try{payload=await response.json()}catch{const failure=new Error('invalid_api_response');failure.code='invalid_api_response';failure.status=response.status;throw failure}
+  }
   if(!response.ok){const failure=new Error(apiErrorMessage(payload,response.status));failure.code=payload?.error||`http_${response.status}`;failure.status=response.status;failure.retryAfter=response.headers.get('Retry-After');throw failure}
   return payload;
 }
