@@ -39,17 +39,13 @@ test('production bundle contains only approved public files', async () => {
   assert.doesNotMatch(await read('styles.css'), /home-hero-v2\.jpg/);
   for (const privateFile of [
     'package.json',
-    'supabase-schema.sql',
-    'supabase-auth-migration.sql',
-    'supabase-security-hardening.sql',
-    'supabase-product-experience.sql',
     'README_УСТАНОВКА.txt'
   ]) {
     assert.ok(!files.includes(privateFile));
   }
 });
 
-test('frontend has no third-party authentication runtime', async () => {
+test('frontend authentication uses only the same-origin API', async () => {
   const html = await read('index.html');
   const config = await read('config.js');
   assert.doesNotMatch(html, /supabase|cdn\.jsdelivr\.net/i);
@@ -322,28 +318,6 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.doesNotMatch(app, /setTimeout\(\(\)=>\{state\.messages/);
   assert.doesNotMatch(app, /const row=\{[^}]*role:/);
   assert.doesNotMatch(app, /\.update\(\{name:registeredName,updated_at:/);
-});
-
-test('Supabase profile privileges cannot be self-assigned', async () => {
-  const authMigration = await read('supabase-auth-migration.sql');
-  const hardening = await read('supabase-security-hardening.sql');
-  const productExperience = await read('supabase-product-experience.sql');
-  assert.doesNotMatch(authMigration, /raw_user_meta_data->>'role'/);
-  assert.match(authMigration, /'customer'/);
-  assert.match(hardening, /revoke all on table public\.profiles/);
-  assert.match(hardening, /grant update \(name, city, avatar_url\)/);
-  assert.doesNotMatch(hardening, /grant update \([^)]*verified/);
-  assert.doesNotMatch(hardening, /grant update \([^)]*role/);
-  assert.match(hardening, /grant insert \(task_id, helper_id, price, message\)/);
-  assert.doesNotMatch(hardening, /grant insert \([^)]*status[^)]*\) on table public\.responses/);
-  assert.match(hardening, /and status = 'pending'/);
-  assert.match(authMigration, /file_size_limit, allowed_mime_types/);
-  assert.match(authMigration, /5242880/);
-  assert.match(productExperience, /create table if not exists public\.profile_private/);
-  assert.match(productExperience, /profile private self read/);
-  assert.match(productExperience, /protect_verified_identity/);
-  assert.match(productExperience, /start_direct_conversation/);
-  assert.match(productExperience, /revoke all on table public\.profile_private/);
 });
 
 test('public config contains no authentication secret', async () => {
