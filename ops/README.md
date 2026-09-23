@@ -77,6 +77,20 @@ sudo -u helpinrus /bin/sh -c 'set -a; . /etc/helpinrus/auth.env; set +a; cd /opt
 curl --fail --silent https://201.51.4.212/api/auth/health
 ```
 
+For a low-volume Gmail sender, generate a 16-character Google app password
+(two-factor authentication must be enabled) and enter it only in the protected
+production terminal:
+
+```sh
+cd /opt/helpinrus
+./ops/configure-gmail-smtp
+```
+
+The prompt hides the app password, writes it only to
+`/etc/helpinrus/auth.env`, preserves that file's owner and permissions, restarts
+the API, and runs the connection/authentication check. Never paste an app
+password into chat, Git, a Pull Request, or a command-line argument.
+
 `smtp-check` connects, negotiates TLS, authenticates, and runs SMTP `NOOP`; it
 sends no message and returns nonzero when SMTP is unavailable. Logs and command
 output do not include SMTP credentials, recipients, or bearer tokens.
