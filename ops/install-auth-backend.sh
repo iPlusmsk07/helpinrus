@@ -130,10 +130,26 @@ systemctl daemon-reload
 systemctl enable helpinrus-auth.service
 systemctl restart helpinrus-auth.service
 systemctl reload nginx
-curl --fail --silent --show-error \
-  --connect-timeout 2 --max-time 5 \
-  http://127.0.0.1:8787/api/auth/health
-echo
+
+# systemd can report the unit as started just before the Python listener begins
+# accepting connections. Give the freshly installed API a bounded readiness
+# window instead of rolling the entire installation back on that normal race.
+health=
+for attempt in 1 2 3 4 5; do
+  health=$(curl --fail --silent \
+    --connect-timeout 2 --max-time 5 \
+    http://127.0.0.1:8787/api/auth/health || true)
+  case "$health" in
+    *'"status":"ok"'*'"database":"ok"'*) break ;;
+  esac
+  if [ "$attempt" -eq 5 ]; then
+    systemctl status --no-pager helpinrus-auth.service >&2 || true
+    echo "Auth API did not become ready: $health" >&2
+    exit 1
+  fi
+  sleep 1
+done
+printf '%s\n' "$health"
 
 committed=1
 trap - ERR INT TERM
