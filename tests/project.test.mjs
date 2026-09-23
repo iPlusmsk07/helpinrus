@@ -39,28 +39,23 @@ test('production bundle contains only approved public files', async () => {
   assert.doesNotMatch(await read('styles.css'), /home-hero-v2\.jpg/);
   for (const privateFile of [
     'package.json',
-    'supabase-schema.sql',
-    'supabase-auth-migration.sql',
-    'supabase-security-hardening.sql',
-    'supabase-product-experience.sql',
     'README_УСТАНОВКА.txt'
   ]) {
     assert.ok(!files.includes(privateFile));
   }
 });
 
-test('browser dependency is version-pinned and integrity-protected', async () => {
+test('frontend authentication uses only the same-origin API', async () => {
   const html = await read('index.html');
-  assert.match(html, /@supabase\/supabase-js@2\.112\.4\/dist\/umd\/supabase\.js/);
-  assert.match(html, /integrity="sha384-[A-Za-z0-9+/=]+"/);
-  assert.match(html, /crossorigin="anonymous"/);
-  assert.doesNotMatch(html, /@supabase\/supabase-js@2["/]/);
+  const config = await read('config.js');
+  assert.doesNotMatch(html, /supabase|cdn\.jsdelivr\.net/i);
+  assert.doesNotMatch(config, /SUPABASE|eyJ[A-Za-z0-9_-]+\./);
+  assert.match(config, /API_BASE:\s*''/);
 });
 
 test('maps use Yandex and do not load Leaflet', async () => {
   const html = await read('index.html');
   const app = await read('app.js');
-  const netlify = await read('netlify.toml');
   assert.doesNotMatch(html, /leaflet/i);
   assert.doesNotMatch(app, /openstreetmap|window\.L|L\.map/i);
   assert.match(app, /api-maps\.yandex\.ru\/2\.1/);
@@ -81,7 +76,6 @@ test('maps use Yandex and do not load Leaflet', async () => {
   assert.match(app, /onpointerdown/);
   assert.match(app, /onpointermove/);
   assert.match(app, /onpointerup/);
-  assert.match(netlify, /api-maps\.yandex\.ru/);
 });
 
 test('navigation, modals, favorites and native pickers match the polished interaction', async () => {
@@ -208,10 +202,9 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /function requireSession\(\)\{if\(state\.session\)return true/);
   assert.match(app, /async function toggleFavorite\(id\)\{if\(!requireSession\(\)\)return/);
   assert.match(app, /function contactService\(ownerId\)\{if\(!requireSession\(\)\)return/);
-  assert.match(app, /async function startDirectChat\(otherUser\)\{if\(!requireSession\(\)\)return/);
-  assert.match(app, /async function openConversation\(id\)\{if\(!requireSession\(\)\)return/);
-  assert.match(app, /async function sendMessage\(event\)\{event\.preventDefault\(\);if\(!requireSession\(\)\)return/);
-  assert.match(app, /else state\.favorites=\[\]/);
+  assert.match(app, /async function startDirectChat\(otherUser\)\{if\(!requireSession\(\)\|\|!sb\)return legacyDataUnavailable\(\)/);
+  assert.match(app, /async function openConversation\(id\)\{if\(!requireSession\(\)\|\|!sb\)return legacyDataUnavailable\(\)/);
+  assert.match(app, /async function sendMessage\(event\)\{event\.preventDefault\(\);if\(!requireSession\(\)\|\|!sb\)return legacyDataUnavailable\(\)/);
   assert.doesNotMatch(app, /state\.favorites=loadLocalFavorites\(\)/);
   assert.match(app, /saveLocalFavorites\(\)/);
   assert.match(styles, /\.desktop-nav/);
@@ -220,11 +213,10 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.doesNotMatch(app, /class="top-avatar"/);
   assert.match(styles, /\.topbar\{[^}]*justify-content:flex-start/);
   assert.match(app, /Телефон или почта/);
-  assert.match(app, /Запомнить пароль/);
+  assert.doesNotMatch(app, /Запомнить пароль|name="remember"|class="remember-password"/);
   assert.match(app, /Нет аккаунта в Помогай\?/);
   assert.match(app, /credentialsForIdentity/);
-  assert.match(app, /Шаг 1 из 2/);
-  assert.match(app, /Шаг 2 из 2/);
+  assert.doesNotMatch(app, /Шаг 1 из 2|Шаг 2 из 2/);
   assert.match(app, /8 или более символов/);
   assert.match(app, /Используйте буквы и цифры/);
   assert.doesNotMatch(app, /Хотя бы одна/);
@@ -245,31 +237,48 @@ test('requested home, navigation and authentication UI is present', async () => 
   assert.match(app, /Зарегистрироваться через Яндекс/);
   assert.match(app, /Зарегистрироваться через Госуслуги/);
   assert.match(app, /Введите email в формате name@example\.com или номер телефона с кодом страны/);
-  assert.match(app, /Введите одноразовый код/);
-  assert.match(app, /verifySignupOtp/);
+  assert.match(app, /Регистрация по телефону пока не поддерживается/);
+  assert.match(app, /function requestSignupEmail\(event\)/);
+  assert.match(app, /apiRequest\('\/api\/auth\/signup',\{method:'POST',body:\{email:details\.credential\}\}\)/);
   assert.match(app, /friendlySignupError/);
   assert.match(app, /Не удалось создать аккаунт или отправить код/);
-  assert.match(app, /Signup error[^\n]+friendlySignupError\(error,pendingSignup\?\.method\)/);
+  assert.match(app, /Signup request[^\n]+friendlySignupError\(error,details\.method\)/);
   assert.doesNotMatch(app, /Подтвердите email/);
   assert.doesNotMatch(app, /Мы отправили ссылку/);
-  assert.match(app, /Введите email — отправим ссылку для создания нового пароля/);
-  assert.match(app, /getPasswordRecoveryRedirectUrl/);
-  assert.match(app, /searchParams\.set\('auth','recovery'\)/);
-  assert.match(app, /resetPasswordForEmail/);
+  assert.match(app, /function showSignupEmailSent\(email\)/);
+  assert.match(app, /apiRequest\('\/api\/auth\/signup\/confirm'/);
+  assert.match(app, /body:\{token,password\}/);
+  assert.doesNotMatch(app, /apiRequest\('\/api\/auth\/signup',\{method:'POST',body:\{email,password\}/);
+  assert.match(app, /email_not_configured/);
+  assert.match(app, /email_delivery_failed/);
+  assert.match(app, /Введите email — отправим безопасную одноразовую ссылку/);
+  assert.match(app, /apiRequest\('\/api\/auth\/password-reset\/request'/);
+  assert.match(app, /apiRequest\('\/api\/auth\/password-reset\/confirm'/);
   assert.match(app, /showPasswordResetEmailSent/);
-  assert.match(app, /signInWithOtp/);
-  assert.match(app, /verifyPasswordResetCode/);
-  assert.match(app, /type:'sms'/);
+  assert.doesNotMatch(app, /resetPasswordForEmail|signInWithOtp|verifyPasswordResetCode/);
+  assert.match(app, /new URLSearchParams\(parsed\.hash\.replace\(\/\^#\/,''\)\)/);
+  assert.match(app, /type=hash\.get\('auth'\),token=hash\.get\('token'\)/);
+  assert.doesNotMatch(app, /parsed\.searchParams\.get\('token'\)|for\(const params of\[hash,parsed\.searchParams\]\)/);
+  assert.match(app, /history\.replaceState\(\{\},document\.title,`\$\{parsed\.pathname\}\$\{parsed\.search\}`\)/);
   assert.match(app, /function hasAuthCallbackParams/);
-  assert.match(app, /callbackKeys=\['code','error','error_code','error_description'\]/);
+  assert.match(app, /function authCallbackFromUrl/);
   assert.match(app, /if\(hasAuthCallbackParams\(\)\)/);
-  assert.match(app, /if\(isRecovery\)showNewPassword\(\)/);
+  assert.match(app, /showNewPassword\(callback\.token\)/);
+  assert.match(app, /showSignupPassword\(callback\.token\)/);
   assert.match(app, /Сервис аккаунтов временно недоступен\. Попробуйте позже\./);
+  assert.match(app, /apiRequest\('\/api\/auth\/session'/);
+  assert.match(app, /apiRequest\('\/api\/auth\/login'/);
+  assert.match(app, /apiRequest\('\/api\/auth\/signup'/);
+  assert.match(app, /apiRequest\('\/api\/auth\/logout'/);
+  assert.match(app, /contentType!=='application\/json'/);
+  assert.match(app, /failure\.code='invalid_api_response'/);
+  assert.doesNotMatch(app, /sb\.auth\./);
 });
 
 test('service worker never caches cross-origin API responses', async () => {
   const worker = await read('sw.js');
   assert.match(worker, /url\.origin!==self\.location\.origin/);
+  assert.match(worker, /url\.pathname\.startsWith\('\/api\/'\)/);
   assert.match(worker, /response\.type==='basic'/);
 });
 
@@ -277,11 +286,11 @@ test('release assets bypass stale browser caches on the IP production site', asy
   const html = await read('index.html');
   const app = await read('app.js');
   const worker = await read('sw.js');
-  assert.match(html, /styles\.css\?v=20260919-1/);
-  assert.match(html, /app\.js\?v=20260919-1/);
-  assert.match(app, /sw\.js\?v=20260919-1/);
+  assert.match(html, /styles\.css\?v=20260919-2/);
+  assert.match(html, /app\.js\?v=20260919-2/);
+  assert.match(app, /sw\.js\?v=20260919-2/);
   assert.match(app, /updateViaCache:'none'/);
-  assert.match(worker, /pomogay-ip-cache-refresh-16/);
+  assert.match(worker, /pomogay-ip-cache-refresh-17/);
 });
 
 test('client does not persist profile, tasks, messages or trust state', async () => {
@@ -311,51 +320,24 @@ test('client does not persist profile, tasks, messages or trust state', async ()
   assert.doesNotMatch(app, /\.update\(\{name:registeredName,updated_at:/);
 });
 
-test('Supabase profile privileges cannot be self-assigned', async () => {
-  const authMigration = await read('supabase-auth-migration.sql');
-  const hardening = await read('supabase-security-hardening.sql');
-  const productExperience = await read('supabase-product-experience.sql');
-  assert.doesNotMatch(authMigration, /raw_user_meta_data->>'role'/);
-  assert.match(authMigration, /'customer'/);
-  assert.match(hardening, /revoke all on table public\.profiles/);
-  assert.match(hardening, /grant update \(name, city, avatar_url\)/);
-  assert.doesNotMatch(hardening, /grant update \([^)]*verified/);
-  assert.doesNotMatch(hardening, /grant update \([^)]*role/);
-  assert.match(hardening, /grant insert \(task_id, helper_id, price, message\)/);
-  assert.doesNotMatch(hardening, /grant insert \([^)]*status[^)]*\) on table public\.responses/);
-  assert.match(hardening, /and status = 'pending'/);
-  assert.match(authMigration, /file_size_limit, allowed_mime_types/);
-  assert.match(authMigration, /5242880/);
-  assert.match(productExperience, /create table if not exists public\.profile_private/);
-  assert.match(productExperience, /profile private self read/);
-  assert.match(productExperience, /protect_verified_identity/);
-  assert.match(productExperience, /start_direct_conversation/);
-  assert.match(productExperience, /revoke all on table public\.profile_private/);
-});
-
-test('public Supabase key is an anon key for the expected project', async () => {
+test('public config contains no authentication secret', async () => {
   const config = await read('config.js');
-  const match = config.match(/SUPABASE_ANON_KEY:\s*'([^']+)'/);
-  assert.ok(match, 'SUPABASE_ANON_KEY is missing');
-  const parts = match[1].split('.');
-  assert.equal(parts.length, 3);
-  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-  assert.equal(payload.role, 'anon');
-  assert.equal(payload.ref, 'llnjgyehxsogjmwegnyf');
+  assert.doesNotMatch(config, /SUPABASE|SERVICE_ROLE|PASSWORD|SECRET|eyJ[A-Za-z0-9_-]+\./);
+  assert.match(config, /API_BASE:\s*''/);
 });
 
-test('Netlify config includes core security headers', async () => {
-  const config = await read('netlify.toml');
-  assert.match(config, /publish = "www"/);
-  for (const header of [
-    'Content-Security-Policy',
-    'Permissions-Policy',
-    'Referrer-Policy',
-    'X-Content-Type-Options',
-    'X-Frame-Options'
-  ]) {
-    assert.match(config, new RegExp(header));
-  }
+test('production Nginx proxies auth only to the local backend', async () => {
+  const snippet = await read('ops/nginx-helpinrus-auth-api.conf');
+  const installer = await read('ops/install-auth-backend.sh');
+  assert.match(snippet, /location \^~ \/api\/auth\//);
+  assert.match(snippet, /proxy_pass http:\/\/127\.0\.0\.1:8787/);
+  assert.match(snippet, /client_max_body_size 16k/);
+  assert.match(snippet, /proxy_set_header X-Forwarded-Proto \$scheme/);
+  assert.match(snippet, /proxy_connect_timeout 3s/);
+  assert.match(snippet, /proxy_read_timeout 120s/);
+  assert.match(installer, /nginx -t/);
+  assert.match(installer, /systemctl reload nginx/);
+  assert.match(installer, /patch_nginx\.py/);
 });
 
 test('GitHub checks run with read-only permissions and a pinned action', async () => {

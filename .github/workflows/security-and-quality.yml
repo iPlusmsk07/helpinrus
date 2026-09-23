@@ -34,13 +34,17 @@ jobs:
           node --check scripts/prepare-www.mjs
           node --test tests/*.test.mjs
 
+      - name: Run authentication API checks
+        run: |
+          PYTHONPYCACHEPREFIX=/tmp/helpinrus-pycache python3 -m compileall -q server ops/patch_nginx.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s server/tests -v
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ops/tests -v
+          bash -n ops/install-auth-backend.sh ops/deploy-helpinrus-launcher ops/deploy-helpinrus
+
       - name: Build public bundle
         run: node scripts/prepare-www.mjs
 
       - name: Verify clean public file list
         run: |
           test "$(find www -maxdepth 1 -type f | wc -l | tr -d ' ')" = "12"
-          test ! -e www/supabase-schema.sql
-          test ! -e www/supabase-security-hardening.sql
-          test ! -e www/supabase-product-experience.sql
           test ! -e www/package.json

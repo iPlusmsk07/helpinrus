@@ -1,0 +1,31 @@
+[Unit]
+Description=Validate Helpinrus SMTP before production cutover
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=helpinrus
+Group=helpinrus
+WorkingDirectory=/opt/helpinrus
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/helpinrus/auth.env
+ExecStart=/usr/bin/python3 -m server.manage smtp-check
+UMask=0077
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/helpinrus
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

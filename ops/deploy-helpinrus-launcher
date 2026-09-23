@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Stable entrypoint installed in /usr/local/sbin. It fetches and pins one commit,
+# checks that the checkout is safe to move, then invokes the worker from that
+# exact fetched commit. This avoids executing a stale installed worker.
+exec 9>/run/lock/deploy-helpinrus.lock
+flock -n 9 || exit 0
+
+repo=/opt/helpinrus
+public=/var/www/helpinrus
+rollback_sha=
+checkout_changed=0
+
+rollback_checkout() {
+  local status=$1
+  trap - ERR INT TERM
+  set +e
+  if [ "$checkout_changed" -eq 1 ] && [ -n "$rollback_sha" ]; then
+    git -C "$repo" checkout --detach --force "$rollback_sha"
+    if systemctl is-enabled --quiet helpinrus-auth.service; then
+      systemctl restart helpinrus-auth.service || true
+    fi
+    logger -t deploy-helpinrus "rolled source and API back to $rollback_sha"
+  fi
+  exit "$status"
+}
+
+trap 'rollback_checkout $?' ERR
+trap 'rollback_checkout 130' INT
+trap 'rollback_checkout 143' TERM
+
+if [ ! -d "$repo/.git" ]; then
+  echo "Expected Git checkout at $repo" >&2
+  exit 1
+fi
+if ! git -C "$repo" diff --quiet || ! git -C "$repo" diff --cached --quiet; then
+  echo "Refusing to deploy over tracked local changes in $repo" >&2
+  exit 1
+fi
+
+git -C "$repo" fetch --quiet origin main
+target_sha=$(git -C "$repo" rev-parse 'origin/main^{commit}')
+git -C "$repo" cat-file -e "$target_sha^{commit}"
+head_sha=$(git -C "$repo" rev-parse 'HEAD^{commit}')
+current_sha=$(cat "$public/.deployed-commit" 2>/dev/null || true)
+if [ "$target_sha" = "$current_sha" ] && [ "$target_sha" = "$head_sha" ]; then
+  exit 0
+fi
+
+rollback_sha=$head_sha
+if [ -n "$current_sha" ] && git -C "$repo" cat-file -e "$current_sha^{commit}" 2>/dev/null; then
+  rollback_sha=$current_sha
+fi
+
+git -C "$repo" checkout --detach --force "$target_sha"
+checkout_changed=1
+worker="$repo/ops/deploy-helpinrus"
+if [ ! -x "$worker" ]; then
+  echo "Pinned commit does not contain executable $worker" >&2
+  exit 1
+fi
+
+"$worker" "$target_sha"
+
+checkout_changed=0
+trap - ERR INT TERM
