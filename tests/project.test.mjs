@@ -348,6 +348,15 @@ test('auth installer waits for the local API readiness window', async () => {
   assert.match(installer, /sleep 1/);
 });
 
+test('Gmail SMTP setup keeps the app password out of command arguments', async () => {
+  const configurator = await read('ops/configure-gmail-smtp');
+  assert.match(configurator, /read -rs smtp_password/);
+  assert.match(configurator, /SMTP_PASSWORD=%s/);
+  assert.doesNotMatch(configurator, /python3 .*smtp_password|sed .*smtp_password/);
+  assert.match(configurator, /chmod --reference="\$environment"/);
+  assert.match(configurator, /server\.manage smtp-check/);
+});
+
 test('GitHub checks run with read-only permissions and a pinned action', async () => {
   const workflow = await read('.github/workflows/security-and-quality.yml');
   assert.match(workflow, /permissions:\s*\n\s+contents: read/);
