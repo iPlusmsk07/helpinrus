@@ -340,6 +340,14 @@ test('production Nginx proxies auth only to the local backend', async () => {
   assert.match(installer, /patch_nginx\.py/);
 });
 
+test('auth installer waits for the local API readiness window', async () => {
+  const installer = await read('ops/install-auth-backend.sh');
+  assert.match(installer, /for attempt in 1 2 3 4 5/);
+  assert.match(installer, /127\.0\.0\.1:8787\/api\/auth\/health/);
+  assert.match(installer, /'"status":"ok"'.*'"database":"ok"'/);
+  assert.match(installer, /sleep 1/);
+});
+
 test('GitHub checks run with read-only permissions and a pinned action', async () => {
   const workflow = await read('.github/workflows/security-and-quality.yml');
   assert.match(workflow, /permissions:\s*\n\s+contents: read/);
