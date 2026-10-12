@@ -18,8 +18,8 @@ importers:
         specifier: 7.6.8
         version: 7.6.8
       '@capacitor/ios':
-        specifier: 7.6.8
-        version: 7.6.8(@capacitor/core@7.6.8)
+        specifier: 7.6.9
+        version: 7.6.9(@capacitor/core@7.6.8)
     devDependencies:
       '@capacitor/cli':
         specifier: 7.6.8
@@ -45,8 +45,8 @@ packages:
   '@capacitor/core@7.6.8':
     resolution: {integrity: sha512-x1xfxvNcTSnj6OoYaAB0n0a0HRvi5f2YjcVnMLxpMhbHDgGDAzzN9z8cnPCYV+SKTvqGF1hezHm82Op32XaAGg==}
 
-  '@capacitor/ios@7.6.8':
-    resolution: {integrity: sha512-TAM1FdI1Cfl8e/wLBo7x5m61V/J1fMEpyxU2psZzHzsa436k2pwEME6CQoBRYdw6Q6gud0jZSPwOVrNn+MI7Ag==}
+  '@capacitor/ios@7.6.9':
+    resolution: {integrity: sha512-LANP81TfwuJk1zq9EuF+J5AJK71rKDgXB5XD+VFJQHC7BxSH4Dsma6DSMyrjFT03jtqc/0JTMEfSMBE7go3ZjA==}
     peerDependencies:
       '@capacitor/core': ^7.6.0
 
@@ -431,7 +431,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@capacitor/ios@7.6.8(@capacitor/core@7.6.8)':
+  '@capacitor/ios@7.6.9(@capacitor/core@7.6.8)':
     dependencies:
       '@capacitor/core': 7.6.8
 
